@@ -15,18 +15,17 @@ export class EmpresaService {
   private docToObject(id: string, data: FirebaseFirestore.DocumentData): EmpresaDTO {
     return {
       id_empresa: id,
-      uuid_auth: data.uuid_auth,
       nome: data.nome,
       plano: data.plano,
       atalhos_rapidos: data.atalhos_rapidos,
       cnpj: data.cnpj,
       descricao: data.descricao,
-      empresa_reference: data.empresa_reference.id,
       endereco: data.endereco,
       img_perfil: data.img_perfil,
       senha: data.senha,
       taxa_servico: data.taxa_servico,
       email: data.email,
+      email_contato: data.email_contato,
       data_criacao: data.data_criacao
     }
   }
