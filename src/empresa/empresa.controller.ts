@@ -1,15 +1,18 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
 import { EmpresaService } from './empresa.service';
 import { EmpresaDTO } from './empresa.dto';
+import { User } from 'src/decorator/user.decorator';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('empresa')
+@UseGuards(AuthGuard)
 export class EmpresaController {
-
+  
   constructor(private readonly empresaService: EmpresaService) { }
-
-  @Get('/:id') // por enquanto o id da empresa será passado por param, posteriormente vai ser pego pelo token
-  encontrarEmpresaPorId(@Param('id') id: string) {
-    return this.empresaService.encontrarPorId(id);
+  
+  @Get() // por enquanto o id da empresa será passado por param, posteriormente vai ser pego pelo token
+  encontrarEmpresaPorId(@User('uid') uid: string, @User('email') email: string) {
+    return this.empresaService.encontrarPorId(uid);
   }
 
   @Put('/:id')

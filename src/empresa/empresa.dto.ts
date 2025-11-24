@@ -1,4 +1,3 @@
-import { DocumentReference } from "firebase-admin/firestore"
 import { PLANOS } from "src/enum/planos.enum"
 
 export type AtalhosRapidosEmpresa = {
@@ -14,14 +13,13 @@ export type TaxaServico = {
 export class EmpresaDTO {
   id_empresa?: string;
   img_perfil?: string;
-  uuid_auth?: string;
-  empresa_reference?: string | DocumentReference;
   nome: string;
   descricao?: string;
   cnpj?: string;
   endereco?: string;
   plano: PLANOS;
-  email: string
+  email: string;
+  email_contato: string;
   senha?: string;
   atalhos_rapidos?: AtalhosRapidosEmpresa[];
   taxa_servico?: TaxaServico;

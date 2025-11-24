@@ -6,19 +6,19 @@ import { getAuth } from 'firebase-admin/auth';
 export class AuthGuard implements CanActivate {
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const token = this.extrairTokenDaRequisicao(request)
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extrairTokenDaRequisicao(request);
 
     try {
       // firebase vai verificar o token automaticamente
-      return await getAuth().verifyIdToken(token)
-        .then(() => {
-          return true;
-        })
-        .catch((error) => {
-          throw new Error(error)
-        });
+      const decodedToken = await getAuth().verifyIdToken(token);
 
+      (request as any).user = {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+      }
+
+      return true
     } catch (error) {
       throw new UnauthorizedException(error)
     }
