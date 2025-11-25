@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import * as firestore_admin from "firebase-admin";
 import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
 import { idToDocumentRef } from 'src/util/firestore.util';
@@ -62,7 +61,6 @@ export class CategoriaProdutoService {
 
   public async remover(id_categoria: string): Promise<void> {
     // ao remover uma categoria, todos os produtos dessa categoria devem ser desvinculados
-    firestore_admin.firestore().settings({ignoreUndefinedProperties: true})
 
     await db.runTransaction(async (transaction) => {
       const categoriaRef = this.setup().doc(id_categoria);

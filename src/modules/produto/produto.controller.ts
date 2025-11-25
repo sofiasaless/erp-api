@@ -34,9 +34,9 @@ export class ProdutoController {
   }
 
   @Delete('/deletar/:id')
-  remover(@Param('id') id: string) {
+  remover(@Param('id') id: string, @User('uid') uid: string) {
     try {
-      this.produtoService.remover(id)
+      this.produtoService.remover(id, uid)
     } catch (error) {
       throw new HttpException(`Erro ao deletar produto ${error}`, HttpStatus.BAD_REQUEST)
     }
@@ -52,10 +52,10 @@ export class ProdutoController {
   }
 
   @Put('/atualizar/:id')
-  atualizarPorId(@Param('id') id: string, @Body() produtoBody: Partial<ProdutoDTO>) {
+  atualizarPorId(@Param('id') id: string, @User('uid') uid: string, @Body() produtoBody: Partial<ProdutoDTO>) {
     try {
       const produtoParaAtualizar: Omit<Partial<ProdutoDTO>, 'id_produto' | 'empresa_reference' | 'data_criacao'> = { ...produtoBody };
-      return this.produtoService.atualizarPorId(id, produtoParaAtualizar);
+      return this.produtoService.atualizarPorId(id, uid, produtoParaAtualizar);
     } catch (error) {
       throw new HttpException(`Erro ao atualizar produto por ID ${error}`, HttpStatus.BAD_REQUEST)
     }
