@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ProdutoDTO } from './produto.dto';
 import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
 import { idToDocumentRef } from 'src/util/firestore.util';
+import { DicionarioService } from '../dicionario/dicionario.service';
+import admin from "firebase-admin";
 
 @Injectable()
 export class ProdutoService {
 
   private COLLECTION_NAME: string
 
-  constructor() {
+  constructor(private readonly dicionarioService: DicionarioService) {
     this.COLLECTION_NAME = COLLECTIONS.PRODUTOS,
       this.setup()
   }
@@ -17,10 +19,10 @@ export class ProdutoService {
   private docToObject(id: string, data: FirebaseFirestore.DocumentData): ProdutoDTO {
     return {
       id_produto: id,
-      id_empresa: data.empresa_reference.id,
+      id_empresa: data.empresa_reference.id || '',
       categoria: data.categoria,
-      categoria_reference: data.categoria_reference.id,
-      empresa_reference: data.empresa_reference.id,
+      categoria_reference: data.categoria_reference.id || '',
+      empresa_reference: data.empresa_reference.id || '',
       nome: data.nome,
       preco_venda: data.preco_venda,
       preco_compra: data.preco_compra,
@@ -33,7 +35,7 @@ export class ProdutoService {
       controle_estoque: data.controle_estoque,
       quantidade_estoque: data.quantidade_estoque,
       rotativo: data.rotativo,
-      data_criacao: data.data_criacao.toDate(),
+      data_criacao: data.data_criacao?.toDate(),
     }
   }
 
@@ -41,25 +43,40 @@ export class ProdutoService {
     return db.collection(this.COLLECTION_NAME)
   }
 
-  public async criar(id_empresa: string, produto: ProdutoDTO): Promise<ProdutoDTO | undefined> {
-    const produtoParaSalvar: ProdutoDTO = {
-      ...produto,
-      nome: produto.nome.toLowerCase(),
-      empresa_reference: idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS),
-      categoria_reference: idToDocumentRef(produto.categoria_reference as string, COLLECTIONS.CATEGORIA_PRODUTO),
-      rotativo: 1,
-      // revisar essa lógica de código do produto, pois quando acontecer alguma exclusão de produto, pode gerar produtos com o mesmo código
-      codigo: (produto.codigo) ? produto.codigo : (await this.setup().count().get().then(count => count.data().count + 1)).toString(),
-      data_criacao: new Date(),
-    }
+  public async criar(id_empresa: string, produto: ProdutoDTO): Promise<ProdutoDTO> {
+    let produtoId: string = ''
+    
+    await db.runTransaction(async (transaction) => {
 
-    const ref = await this.setup().add(produtoParaSalvar)
-    const doc = await ref.get()
+      const produtoRef = this.setup().doc();
+      produtoId = produtoRef.id
 
-    // falta adicionar o produto ao dicionario da empresa
-    // .....
+      const produtoParaSalvar: ProdutoDTO = {
+        ...produto,
+        nome: produto.nome.toLowerCase(),
+        empresa_reference: idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS),
+        categoria_reference: idToDocumentRef(produto.categoria_reference as string, COLLECTIONS.CATEGORIA_PRODUTO),
+        rotativo: 1,
+        // revisar essa lógica de código do produto, pois quando acontecer alguma exclusão de produto, pode gerar produtos com o mesmo código
+        codigo: (produto.codigo) ? produto.codigo : (await this.setup().count().get().then(count => count.data().count + 1)).toString(),
+        data_criacao: new Date(),
+      }
 
-    return this.docToObject(doc.id, doc.data()!);
+      transaction.set(produtoRef, produtoParaSalvar);
+
+      await this.dicionarioService.adicionar_EmTransacao(
+        transaction,
+        id_empresa,
+        {
+          id_produto: produtoRef.id,
+          label: produtoParaSalvar.nome
+        }
+      );
+    });
+
+    const docCriado = await this.setup().doc(produtoId).get()
+    if(!docCriado.exists) throw new HttpException(`Produto não foi criado corretamente`, HttpStatus.BAD_REQUEST);
+    return this.docToObject(docCriado.id, docCriado.data()!)
   }
 
   public async listarTodos(id_empresa: string): Promise<ProdutoDTO[]> {
@@ -80,6 +97,7 @@ export class ProdutoService {
     await this.setup().doc(id_produto).delete();
   }
 
+  // ao atualizar um produto, seu dicionario também deve ser atualizado
   public async atualizarPorId(id_produto: string, payload: Partial<ProdutoDTO>): Promise<void> {
     const produtoRef = this.setup().doc(id_produto);
     const produtoDoc = await produtoRef.get();
@@ -128,7 +146,7 @@ export class ProdutoService {
   }) {
     let query = this.setup().orderBy(ordem ?? "data_criacao", "desc");
     query = query.where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS));
-    
+
     // if (categoria) query = query.where("categoria", "==", categoria);
 
     let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData, FirebaseFirestore.DocumentData>;

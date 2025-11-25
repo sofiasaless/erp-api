@@ -7,6 +7,8 @@ import { EmpresaModule } from './modules/empresa/empresa.module';
 import { ProdutoModule } from './modules/produto/produto.module';
 import { AdminModule } from './admin/admin.module';
 import { FuncionarioModule } from './modules/funcionario/funcionario.module';
+import { CategoriaProdutoModule } from './modules/categoria-produto/categoria-produto.module';
+import { DicionarioModule } from './modules/dicionario/dicionario.module';
 
 @Module({
   imports: [
@@ -15,7 +17,9 @@ import { FuncionarioModule } from './modules/funcionario/funcionario.module';
     EmpresaModule,
     AuthModule,
     AdminModule,
-    FuncionarioModule
+    FuncionarioModule,
+    CategoriaProdutoModule,
+    DicionarioModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -2,5 +2,7 @@ export enum COLLECTIONS {
   PRODUTOS = "produtos",
   CATEGORIA_PRODUTO = "categoria-produtos",
   EMPRESAS = "empresas",
-  FUNCIONARIOS = "funcionarios"
+  FUNCIONARIOS = "funcionarios",
+  DICIONARIO = "dicionario-pesquisa",
+  CATEGORIA = "categoria-produto",
 }
