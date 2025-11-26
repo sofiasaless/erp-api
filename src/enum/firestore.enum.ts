@@ -4,4 +4,6 @@ export enum COLLECTIONS {
   EMPRESAS = "empresas",
   FUNCIONARIOS = "funcionarios",
   DICIONARIO = "dicionario-pesquisa",
+  ESTATISTICA = "estatistica-produto",
+  VENDAS = "vendas"
 }
