@@ -9,6 +9,8 @@ import { AdminModule } from './admin/admin.module';
 import { FuncionarioModule } from './modules/funcionario/funcionario.module';
 import { CategoriaProdutoModule } from './modules/categoria-produto/categoria-produto.module';
 import { DicionarioModule } from './modules/dicionario/dicionario.module';
+import { EstatisticaProdutoModule } from './modules/estatistica-produto/estatistica-produto.module';
+import { VendaModule } from './venda/venda.module';
 
 @Module({
   imports: [
@@ -19,7 +21,9 @@ import { DicionarioModule } from './modules/dicionario/dicionario.module';
     AdminModule,
     FuncionarioModule,
     CategoriaProdutoModule,
-    DicionarioModule
+    DicionarioModule,
+    EstatisticaProdutoModule,
+    VendaModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,21 @@
+import { DocumentReference } from "firebase-admin/firestore";
+import { ProdutoDTO } from "../produto/produto.dto";
+
+export class EstatisticaProdutoDTO {
+  id_estatistica?: string;
+  id_empresa?: string;
+  id_produto?: string;
+  ultima_venda: Date;
+  datas_historico_vendas?: Date[];
+  empresa_reference: DocumentReference | string | null;
+  produto_reference: DocumentReference | string | null;
+  produto_objeto?: ProdutoDTO;
+  quantidade_saida: number;
+  lucro: number;
+  data_criacao: Date;
+}
+
+export type EstatisticaProdutoBodyParaVendas = {
+  quantidade_vendida: number,
+  preco_atual: number, 
+}
