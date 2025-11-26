@@ -5,7 +5,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EmpresaModule } from './modules/empresa/empresa.module';
 import { ProdutoModule } from './modules/produto/produto.module';
-import { AdminModule } from './admin/admin.module';
+// import { AdminModule } from './admin/admin.module';
 import { FuncionarioModule } from './modules/funcionario/funcionario.module';
 import { CategoriaProdutoModule } from './modules/categoria-produto/categoria-produto.module';
 import { DicionarioModule } from './modules/dicionario/dicionario.module';
@@ -18,7 +18,7 @@ import { VendaModule } from './venda/venda.module';
     ProdutoModule,
     EmpresaModule,
     AuthModule,
-    AdminModule,
+    // AdminModule,
     FuncionarioModule,
     CategoriaProdutoModule,
     DicionarioModule,
