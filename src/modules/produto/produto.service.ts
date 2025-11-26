@@ -29,8 +29,8 @@ export class ProdutoService {
       codigo: data.codigo,
       uni_medida: data.uni_medida,
       imagemProduto: data.imagemProduto,
-      ultima_atualizacao: data.ultima_atualizacao?.toDate(),
-      ultima_reposicao: data.ultima_reposicao?.toDate(),
+      ultima_atualizacao: data.ultima_atualizacao?.toDate() || '',
+      ultima_reposicao: data.ultima_reposicao?.toDate() || '',
       categoria_impressao: data.categoria_impressao,
       controle_estoque: data.controle_estoque,
       quantidade_estoque: data.quantidade_estoque,
@@ -57,6 +57,7 @@ export class ProdutoService {
         empresa_reference: idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS),
         categoria_reference: idToDocumentRef(produto.categoria_reference as string, COLLECTIONS.CATEGORIA_PRODUTO),
         rotativo: 1,
+        preco_compra: (produto.preco_compra === undefined)?0:produto.preco_compra,
         // revisar essa lógica de código do produto, pois quando acontecer alguma exclusão de produto, pode gerar produtos com o mesmo código
         codigo: (produto.codigo) ? produto.codigo : (await this.setup().count().get().then(count => count.data().count + 1)).toString(),
         data_criacao: new Date(),
