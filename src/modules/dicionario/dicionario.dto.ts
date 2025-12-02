@@ -6,8 +6,8 @@ export type ProdutoDicionario = {
 }
 
 export class DicionarioDTO {
+  id?: string;
   id_empresa?: string;
-  id_dicionario?: string;
   empresa_reference: DocumentReference;
   dicionario_produtos: ProdutoDicionario[];
 }

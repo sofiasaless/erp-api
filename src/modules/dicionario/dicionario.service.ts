@@ -21,7 +21,7 @@ export class DicionarioService {
 
   private docToObject(id: string, data: FirebaseFirestore.DocumentData): DicionarioDTO {
     return {
-      id_dicionario: id,
+      id: id,
       id_empresa: data.empresa_reference.id,
       empresa_reference: data.empresa_reference.id,
       dicionario_produtos: data.dicionario_produtos
@@ -69,7 +69,7 @@ export class DicionarioService {
       label: produto_dicionario.label
     }
 
-    const dicRef = this.setup().doc(dicionarioParaAtualizar.id_dicionario!);
+    const dicRef = this.setup().doc(dicionarioParaAtualizar.id!);
 
     transaction.update(dicRef, {
       dicionario_produtos: dicionarioParaAtualizar.dicionario_produtos
@@ -83,7 +83,7 @@ export class DicionarioService {
     // encontrando o produto e o atualizando
     const produtosDicionarioAtualizado = dicionarioParaAtualizar.dicionario_produtos.filter(item => item.id_produto !== id_produto)
 
-    const dicRef = this.setup().doc(dicionarioParaAtualizar.id_dicionario!)
+    const dicRef = this.setup().doc(dicionarioParaAtualizar.id!)
 
     transaction.update(dicRef, {
       dicionario_produtos: produtosDicionarioAtualizado
