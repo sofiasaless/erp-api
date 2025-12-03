@@ -53,7 +53,7 @@ export class ProdutoService {
         ...produto,
         nome: produto.nome.toLowerCase(),
         empresa_reference: idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS),
-        categoria_reference: (produto.categoria_reference === '')?null:idToDocumentRef(produto.categoria_reference as string, COLLECTIONS.CATEGORIA_PRODUTO),
+        categoria_reference: (produto.categoria_reference === '') ? null : idToDocumentRef(produto.categoria_reference as string, COLLECTIONS.CATEGORIA_PRODUTO),
         rotativo: 1,
         preco_compra: (produto.preco_compra === undefined) ? 0 : produto.preco_compra,
         // revisar essa lógica de código do produto, pois quando acontecer alguma exclusão de produto, pode gerar produtos com o mesmo código
@@ -244,10 +244,13 @@ export class ProdutoService {
       transaction.update(prodRef, {
         quantidade_estoque: admin.firestore.FieldValue.increment(valor)
       })
-    } else {
+      return
+    }
+    if (tipoOperacao === 'MENOS') {
       transaction.update(prodRef, {
-        quantidade_estoque: admin.firestore.FieldValue.increment(-1)
+        quantidade_estoque: admin.firestore.FieldValue.increment(-(valor * (-1)))
       })
+      return
     }
   }
 
