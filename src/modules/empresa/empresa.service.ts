@@ -14,7 +14,7 @@ export class EmpresaService {
 
   private docToObject(id: string, data: FirebaseFirestore.DocumentData): EmpresaDTO {
     return {
-      id_empresa: id,
+      id: id,
       nome: data.nome,
       plano: data.plano,
       atalhos_rapidos: data.atalhos_rapidos,
