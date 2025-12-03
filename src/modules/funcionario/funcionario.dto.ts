@@ -4,7 +4,6 @@ export type TipoFuncionario = 'CAIXA' | 'GERENTE' | 'GARCOM' | 'VENDEDOR'
 
 export class FuncionarioDTO {
   id?: string;
-  id_empresa?: string;
   empresa_reference: DocumentReference;
   tipo: TipoFuncionario;
   permissao: TipoFuncionario[];

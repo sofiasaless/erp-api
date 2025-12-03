@@ -79,17 +79,6 @@ export class VendaService {
 
       for (const item of vendaParaSalvar.itens_venda!) {
         if (typeof item.produto_reference !== 'string') {
-
-          // await this.estatisticaProdutoService.adicionar_EmTransacao(
-          //   transaction,
-          //   id_empresa,
-          //   item.produto_reference?.id!,
-          //   {
-          //     preco_atual: item.produto_objeto.preco_venda,
-          //     quantidade_vendida: item.quantidade
-          //   }
-          // )
-
           await this.produtoService.atualizarEstoque_EmTransacao(
             transaction,
             item.produto_reference?.id!,

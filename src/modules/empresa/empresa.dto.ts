@@ -17,6 +17,7 @@ export class EmpresaDTO {
   descricao?: string;
   cnpj?: string;
   endereco?: string;
+  telefone?: string;
   plano: PLANOS;
   email: string;
   email_contato: string;

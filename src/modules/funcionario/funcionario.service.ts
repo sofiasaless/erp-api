@@ -23,14 +23,13 @@ export class FuncionarioService {
   private docToObject(id: string, data: FirebaseFirestore.DocumentData): FuncionarioDTO {
     return {
       id: id,
-      id_empresa: data.empresa_reference.id,
-      empresa_reference: data.empresa_reference,
+      empresa_reference: data.empresa_reference.id || '',
       nome: data.nome,
       permissao: data.permissao,
       senha: data.senha,
       tipo: data.tipo,
       ativo: data.ativo,
-      ultimo_acesso: data.ultimo_acesso || '',
+      ultimo_acesso: data.ultimo_acesso?.toDate() || '',
       data_criacao: data.data_criacao?.toDate(),
     }
   }
