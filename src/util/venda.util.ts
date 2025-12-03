@@ -31,3 +31,15 @@ export function somarTotalItensVenda(itensVenda: ItemVenda[] | undefined, servic
   // return Number(totalItens) + totalServico;
   return Number(totalItens);
 }
+
+export const calcularTotalVendas = (vendas: VendaDTO[]): number => {
+  return vendas.reduce((totalGeral, venda) => {
+    const totalVenda = venda.itens_venda.reduce((soma, item) => {
+      const preco = item.produto_objeto?.preco_venda ?? 0;
+      const quantidade = item.quantidade ?? 0;
+      return soma + preco * quantidade;
+    }, 0);
+
+    return totalGeral + totalVenda;
+  }, 0);
+};
