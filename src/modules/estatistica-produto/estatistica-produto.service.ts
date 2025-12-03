@@ -3,7 +3,8 @@ import admin from "firebase-admin";
 import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
 import { idToDocumentRef } from 'src/util/firestore.util';
-import { EstatisticaProdutoBodyParaVendas, EstatisticaProdutoDTO } from './estatistica-produto.dto';
+import { ItemVenda } from '../venda/venda.dto';
+import { EstatisticaProdutoBodyParaVendas, EstatisticaProdutoDTO, TransacaoEstatistica } from './estatistica-produto.dto';
 
 @Injectable()
 export class EstatisticaProdutoService {
@@ -46,7 +47,7 @@ export class EstatisticaProdutoService {
 
     const query = this.setup()
       .where("empresa_reference", "==", empresaRef)
-    .where("produto_reference", "==", produtoRef);
+      .where("produto_reference", "==", produtoRef);
 
     const estSnapshot = await transaction.get(query);
 
@@ -86,6 +87,76 @@ export class EstatisticaProdutoService {
     });
   }
 
+  public async adicionarLote_EmTransacao(
+    transaction: FirebaseFirestore.Transaction,
+    id_empresa: string,
+    itens_produtos: ItemVenda[],
+  ): Promise<void> {
+    const empresaRef = idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS);
+
+    const objetosPromises = itens_produtos.map(async (item) => {
+      const produtoRef = idToDocumentRef(item.produto_objeto.id, COLLECTIONS.PRODUTOS)
+
+      const query = this.setup().where("empresa_reference", "==", empresaRef).where("produto_reference", "==", produtoRef);
+
+      const snap = await transaction.get(query);
+
+      const dadosEst: EstatisticaProdutoBodyParaVendas = {
+        preco_atual: item.produto_objeto.preco_venda,
+        quantidade_vendida: item.quantidade
+      }
+
+      const final: TransacaoEstatistica = {
+        dados_estatistica: dadosEst,
+        produto_reference: produtoRef,
+        snapshot: snap
+      }
+
+      return final
+    })
+
+    const objetos_de_transacoes = await Promise.all(objetosPromises);
+
+    objetos_de_transacoes.map((obj) => {
+      let estatisticaParaSalvar: Partial<EstatisticaProdutoDTO> = {
+        empresa_reference: empresaRef,
+        produto_reference: obj.produto_reference,
+        ultima_venda: new Date(),
+      };
+
+      // se ta vazia é porque o produto ainda nao tem estatistica, entao precisa ser criada
+      if (obj.snapshot.empty) {
+        const newRef = this.setup().doc();
+        estatisticaParaSalvar.data_criacao = new Date();
+
+        transaction.set(newRef, {
+          ...estatisticaParaSalvar,
+          lucro: admin.firestore.FieldValue.increment(
+            obj.dados_estatistica.quantidade_vendida * obj.dados_estatistica.preco_atual
+          ),
+          quantidade_saida: admin.firestore.FieldValue.increment(
+            obj.dados_estatistica.quantidade_vendida
+          ),
+          datas_historico_vendas: admin.firestore.FieldValue.arrayUnion(new Date()),
+        });
+        return;
+      }
+
+      const estRef = obj.snapshot.docs[0].ref;
+
+      transaction.update(estRef, {
+        lucro: admin.firestore.FieldValue.increment(
+          obj.dados_estatistica.quantidade_vendida * obj.dados_estatistica.preco_atual
+        ),
+        quantidade_saida: admin.firestore.FieldValue.increment(
+          obj.dados_estatistica.quantidade_vendida
+        ),
+        datas_historico_vendas: admin.firestore.FieldValue.arrayUnion(new Date()),
+      });
+
+    })
+  }
+
   public async encontrar(id_empresa: string, id_produto: string): Promise<EstatisticaProdutoDTO> {
     const estSnapshot = await this.setup()
       .where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
@@ -100,7 +171,7 @@ export class EstatisticaProdutoService {
   public async remover_EmTransacao(transaction: FirebaseFirestore.Transaction, id_empresa: string, id_produto: string) {
     const estEncontrada = await this.encontrar(id_empresa, id_produto);
     const estRef = this.setup().doc(estEncontrada.id_estatistica!)
-  
+
     transaction.delete(estRef);
   }
 

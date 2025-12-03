@@ -1,5 +1,6 @@
 import { DocumentReference } from "firebase-admin/firestore";
 import { ProdutoDTO } from "../produto/produto.dto";
+import admin from "firebase-admin";
 
 export class EstatisticaProdutoDTO {
   id_estatistica?: string;
@@ -18,4 +19,10 @@ export class EstatisticaProdutoDTO {
 export type EstatisticaProdutoBodyParaVendas = {
   quantidade_vendida: number,
   preco_atual: number, 
+}
+
+export type TransacaoEstatistica = {
+  produto_reference: DocumentReference,
+  dados_estatistica: EstatisticaProdutoBodyParaVendas,
+  snapshot: admin.firestore.QuerySnapshot<admin.firestore.DocumentData, admin.firestore.DocumentData>
 }

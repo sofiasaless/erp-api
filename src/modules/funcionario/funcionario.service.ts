@@ -3,7 +3,7 @@ import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
 import { criptografarSenha, verificarSenha } from 'src/util/bcrypt.util';
 import { idToDocumentRef } from 'src/util/firestore.util';
-import { FuncionarioDTO, FuncionarioRequestAuthDTO } from './funcionario.dto';
+import { FuncionarioDTO, FuncionarioRequestAuthDTO, ListaFuncionarioDTO } from './funcionario.dto';
 import { VendaService } from '../venda/venda.service';
 
 @Injectable()
@@ -22,15 +22,14 @@ export class FuncionarioService {
 
   private docToObject(id: string, data: FirebaseFirestore.DocumentData): FuncionarioDTO {
     return {
-      id_usuario: id,
-      id_empresa: data.empresa_reference.id,
-      empresa_reference: data.empresa_reference,
+      id: id,
+      empresa_reference: data.empresa_reference.id || '',
       nome: data.nome,
       permissao: data.permissao,
       senha: data.senha,
       tipo: data.tipo,
       ativo: data.ativo,
-      ultimo_acesso: data.ultimo_acesso || '',
+      ultimo_acesso: data.ultimo_acesso?.toDate() || '',
       data_criacao: data.data_criacao?.toDate(),
     }
   }
@@ -84,12 +83,18 @@ export class FuncionarioService {
     });
   }
 
-  public async listarTodos(id_empresa: string): Promise<FuncionarioDTO[]> {
+  public async listarTodos(id_empresa: string): Promise<ListaFuncionarioDTO> {
     let query = await this.setup().where('empresa_reference', '==', idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS)).get();
     if (!query.empty) {
-      return query.docs.map(doc => this.docToObject(doc.id, doc.data()));
+      return {
+        total: query.docs.length,
+        funcionarios: query.docs.map(doc => this.docToObject(doc.id, doc.data()))
+      }
     }
-    return []
+    return {
+      total: 0,
+      funcionarios: []
+    }
   }
 
   public async remover(id_funcionario: string) {

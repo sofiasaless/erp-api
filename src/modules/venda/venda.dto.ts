@@ -2,7 +2,7 @@ import { DocumentReference } from "firebase-admin/firestore";
 import { ProdutoDTO } from "src/modules/produto/produto.dto";
 
 export class VendaDTO {
-  id_venda?: string;
+  id?: string;
   id_empresa?: string;
   codigo?: string;
   empresa_reference: DocumentReference | string | null;

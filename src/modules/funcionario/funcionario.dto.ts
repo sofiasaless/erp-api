@@ -1,15 +1,14 @@
 import { DocumentReference } from "firebase-admin/firestore";
-import { VendaDTO } from "../venda/venda.dto";
 
 export type TipoFuncionario = 'CAIXA' | 'GERENTE' | 'GARCOM' | 'VENDEDOR'
 
 export class FuncionarioDTO {
-  id_usuario?: string;
-  id_empresa?: string;
+  id?: string;
   empresa_reference: DocumentReference;
   tipo: TipoFuncionario;
   permissao: TipoFuncionario[];
   nome: string;
+  telefone?: string;
   senha: string;
   ativo?: boolean;
   ultimo_acesso?: Date;
@@ -23,5 +22,11 @@ export class FuncionarioRequestAuthDTO {
 
 export type FuncionarioEstatisticasVendas = {
   total_vendas: number,
+  receita: number,
   vendas: any
+}
+
+export type ListaFuncionarioDTO = {
+  total: number,
+  funcionarios: FuncionarioDTO[]
 }

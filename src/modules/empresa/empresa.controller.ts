@@ -18,7 +18,7 @@ export class EmpresaController {
   @Put('/atualizar')
   atualizarPorId(@User('uid') uid: string, @Body() empresaBody: Partial<EmpresaDTO>) {
     // tirando os campos que nao permitidos passar por alterações
-    const camposNaoPermitidos = ['id_empresa', 'empresa_reference', 'data_criacao', 'email', 'plano', 'uuid_auth'];
+    const camposNaoPermitidos = ['id_empresa', 'empresa_reference', 'data_criacao', 'email', 'plano'];
     for (const campo of camposNaoPermitidos) {
       if (campo in empresaBody) delete (empresaBody as any)[campo];
     }

@@ -11,12 +11,13 @@ export type TaxaServico = {
 }
 
 export class EmpresaDTO {
-  id_empresa?: string;
+  id?: string;
   img_perfil?: string;
   nome: string;
   descricao?: string;
   cnpj?: string;
   endereco?: string;
+  telefone?: string;
   plano: PLANOS;
   email: string;
   email_contato: string;

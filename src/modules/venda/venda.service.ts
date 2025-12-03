@@ -4,8 +4,8 @@ import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
 import { EstatisticaProdutoService } from 'src/modules/estatistica-produto/estatistica-produto.service';
 import { ProdutoService } from 'src/modules/produto/produto.service';
-import { idToDocumentRef } from 'src/util/firestore.util';
-import { calcularTroco } from 'src/util/venda.util';
+import { docToObject, idToDocumentRef } from 'src/util/firestore.util';
+import { calcularTotalVendas, calcularTroco } from 'src/util/venda.util';
 import { FluxoCaixaDTO } from '../fluxo-caixa/fluxo-caixa.dto';
 import { FluxoCaixaService } from '../fluxo-caixa/fluxo-caixa.service';
 import { FuncionarioEstatisticasVendas } from '../funcionario/funcionario.dto';
@@ -74,47 +74,43 @@ export class VendaService {
 
     // executando a transação nas estatisticas, fluxo e venda
     await db.runTransaction(async (transaction) => {
-      // atualizando estatistica do produto 
-      vendaParaSalvar.itens_venda?.map(async (item) => {
-        if (typeof item.produto_reference != 'string') {
-          await this.estatisticaProdutoService.adicionar_EmTransacao(transaction, id_empresa, item.produto_reference?.id!, {
-            preco_atual: item.produto_objeto.preco_venda,
-            quantidade_vendida: item.quantidade
-          })
-          // atualizando o estoque do produto
-          await this.produtoService.atualizarEstoque_EmTransacao(transaction, item.produto_reference?.id!, item.quantidade, 'MENOS')
+
+      await this.estatisticaProdutoService.adicionarLote_EmTransacao(transaction, id_empresa, vendaParaSalvar.itens_venda);
+
+      for (const item of vendaParaSalvar.itens_venda!) {
+        if (typeof item.produto_reference !== 'string') {
+          await this.produtoService.atualizarEstoque_EmTransacao(
+            transaction,
+            item.produto_reference?.id!,
+            item.quantidade,
+            'MENOS'
+          )
         }
-      })
+      }
 
-      // salvando a venda criada
+      // salvar venda
       const novaVendaRef = this.setup().doc()
-      transaction.set(novaVendaRef, vendaParaSalvar);
+      transaction.set(novaVendaRef, vendaParaSalvar)
 
-      // // registrando estatistica do produto 
-      // vendaParaSalvar.itens_venda.map(async (item) => {
-      //   await this.estatisticaProdutoService.adicionar_EmTransacao(transaction, id_empresa, item.id_produto!, {
-      //     preco_atual: item.produto_objeto.preco_venda,
-      //     quantidade_vendida: item.quantidade
-      //   })
-      // })
-
-      // por fim, registrando os valores que entraram no fluxo
+      // atualizar fluxo
       const atualizacoesParaFluxo: Partial<FluxoCaixaDTO> = {
         entradas: venda.pagamentos,
         troco: calcularTroco(venda)
       }
-      await this.fluxoService.atualizar_EmTransacao(transaction, id_empresa, atualizacoesParaFluxo);
+      await this.fluxoService.atualizar_EmTransacao(transaction, id_empresa, atualizacoesParaFluxo)
     })
   }
 
   public async enontrarVendasPorIdFuncionario(id_empresa: string, id_funcionario: string) {
     let querySnap = await this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
       .where("funcionarios_responsaveis", "array-contains", idToDocumentRef(id_funcionario, COLLECTIONS.FUNCIONARIOS))
-    .get()
+      .get()
 
     if (querySnap.empty) {
       return {
-        total_vendas: 0
+        total_vendas: 0,
+        receita: 0,
+        vendas: []
       } as FuncionarioEstatisticasVendas
     }
 
@@ -122,9 +118,15 @@ export class VendaService {
     //   return 
     // })
 
+    const vendasObject: VendaDTO[] = querySnap.docs.map((doc) => {
+      return docToObject<VendaDTO>(doc.id, doc.data());
+    })
+
+
     return {
       total_vendas: querySnap.size,
-      vendas: querySnap.docs
+      receita: calcularTotalVendas(vendasObject),
+      vendas: vendasObject,
     } as FuncionarioEstatisticasVendas
 
   }
