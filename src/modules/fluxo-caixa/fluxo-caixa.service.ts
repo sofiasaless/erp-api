@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import admin from "firebase-admin";
 import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
@@ -72,8 +72,18 @@ export class FluxoCaixaService {
     return this.docToObject(query.docs[0].id, query.docs[0].data()!);
   }
 
+  public async encontrarPorId(id_fluxo) {
+    let fluxo = await this.setup().doc(id_fluxo).get()
+
+    if (!fluxo.exists) throw new HttpException("Fluxo não encontrado", HttpStatus.BAD_REQUEST);
+
+    return this.docToObject(fluxo.id, fluxo.data()!);
+  }
+
   public async listarTodos(id_empresa: string) {
-    const fluxSnap = await this.setup().where('empresa_reference', '==', idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS)).get()
+    const fluxSnap = await this.setup().where('empresa_reference', '==', idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+      .orderBy("data_abertura", "desc")
+    .get()
 
     if (fluxSnap.empty) return []
 

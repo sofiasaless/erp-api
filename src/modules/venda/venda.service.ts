@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { DocumentReference } from 'firebase-admin/firestore';
+import { DocumentReference, Timestamp } from 'firebase-admin/firestore';
 import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
 import { EstatisticaProdutoService } from 'src/modules/estatistica-produto/estatistica-produto.service';
@@ -134,5 +134,52 @@ export class VendaService {
     } as FuncionarioEstatisticasVendas
 
   }
+
+  public async encontrarPorFluxoAtual(id_empresa: string) {
+    const fluxoDeCaixaAtual = await this.fluxoService.encontrar("status", "==", true, id_empresa);
+
+    const dataAbertura = Timestamp.fromDate(fluxoDeCaixaAtual?.data_abertura!)
+
+    if (!fluxoDeCaixaAtual) return []
+
+    const querySnap = await this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+      .where("data_venda", ">=", dataAbertura)
+      .orderBy("data_venda", "desc")
+      .get();
+
+    if (querySnap.empty) return []
+
+    const vendasEncontradas: VendaDTO[] = querySnap.docs.map((doc) => {
+      return docToObject<VendaDTO>(doc.id, doc.data())
+    })
+
+    return vendasEncontradas;
+  }
+
+  public async encontrarPorIdFluxo(id_empresa: string, id_fluxo: string) {
+    const fluxoEncontrado = await this.fluxoService.encontrarPorId(id_fluxo);
+
+    const dataAbertura = Timestamp.fromDate(fluxoEncontrado?.data_abertura!)
+
+    let query = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+      .where("data_venda", ">=", dataAbertura)
+    .orderBy("data_venda", "desc");
+
+    if (!fluxoEncontrado.status) {
+      const dataFechamento = Timestamp.fromDate(fluxoEncontrado?.data_fechamento!)
+      query = query.where("data_venda", "<=", dataFechamento);
+    }
+
+    const querySnap = await query.get();
+
+    if (querySnap.empty) return []
+
+    const vendasEncontradas: VendaDTO[] = querySnap.docs.map((doc) => {
+      return docToObject<VendaDTO>(doc.id, doc.data())
+    })
+
+    return vendasEncontradas;
+  }
+
 
 }
