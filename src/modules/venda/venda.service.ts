@@ -72,6 +72,8 @@ export class VendaService {
       data_venda: new Date()
     }
 
+    let novaVendaRef: DocumentReference<FirebaseFirestore.DocumentData, FirebaseFirestore.DocumentData> = this.setup().doc()
+
     // executando a transação nas estatisticas, fluxo e venda
     await db.runTransaction(async (transaction) => {
 
@@ -89,7 +91,6 @@ export class VendaService {
       }
 
       // salvar venda
-      const novaVendaRef = this.setup().doc()
       transaction.set(novaVendaRef, vendaParaSalvar)
 
       // atualizar fluxo
@@ -99,6 +100,9 @@ export class VendaService {
       }
       await this.fluxoService.atualizar_EmTransacao(transaction, id_empresa, atualizacoesParaFluxo)
     })
+
+    const vendaConcluida = await novaVendaRef.get()
+    return docToObject<VendaDTO>(vendaConcluida.id, vendaConcluida.data()!);
   }
 
   public async enontrarVendasPorIdFuncionario(id_empresa: string, id_funcionario: string) {

@@ -21,13 +21,13 @@ export class FluxoCaixaService {
 
   private docToObject(id: string, data: FirebaseFirestore.DocumentData): FluxoCaixaDTO {
     return {
-      id_fluxo: id,
-      data_abertura: data.data_abertura?.toDate(),
-      data_fechamento: data.data_fechamento?.toDate(),
+      id: id,
+      data_abertura: data.data_abertura?.toDate() || '',
+      data_fechamento: data.data_fechamento?.toDate() || '',
       diferencas: data.diferencas,
       empresa_reference: data.empresa_reference.id || '',
       entradas: data.entradas,
-      funcionario_responsavel_abertura: data.funcionario_responsavel_abertura || '',
+      funcionario_responsavel_abertura: data.funcionario_responsavel_abertura?.id || '',
       funcionario_responsavel_fechamento: data.funcionario_responsavel_fechamento?.id || '',
       reposicao_troco: data.reposicao_troco,
       sangria: data.sangria,
@@ -101,7 +101,7 @@ export class FluxoCaixaService {
 
     if (!fluxoAberto) return;
 
-    const docRef = this.setup().doc(fluxoAberto.id_fluxo!);
+    const docRef = this.setup().doc(fluxoAberto.id!);
 
     // 1 — Primeiro update sem mexer nos arrays
     const updateData: any = {};
