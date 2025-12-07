@@ -2,11 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import 'tsconfig-paths/register';
 import { AppModule } from './app.module';
 
-// Função usada pela Vercel
-export async function createApp() {
-  const app = await NestFactory.create(AppModule, {
-    cors: false, // habilitaremos manualmente
-  });
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
   app.enableCors({
     origin: [
@@ -18,25 +15,12 @@ export async function createApp() {
     credentials: true,
   });
 
-  await app.init();
-  return app.getHttpAdapter().getInstance();
+  const port = process.env.PORT || 3000;
+
+  // MUITO IMPORTANTE NO CLOUD RUN:
+  await app.listen(port, '0.0.0.0');
+
+  console.log(`API rodando na porta ${port}`);
 }
 
-// Rodar apenas localmente:
-if (!process.env.VERCEL) {
-  (async () => {
-    const app = await NestFactory.create(AppModule);
-
-    app.enableCors({
-      origin: [
-        'http://localhost:5173',
-      ],
-      methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Authorization',
-      credentials: true,
-    });
-
-    await app.listen(process.env.PORT ?? 3001);
-    console.log('API rodando localmente na porta ' + (process.env.PORT ?? 3001));
-  })();
-}
+bootstrap();
