@@ -12,6 +12,7 @@ export class FluxoCaixaController {
 
   constructor(private readonly fluxoService: FluxoCaixaService) {}
 
+  @HttpCode(HttpStatus.CREATED)
   @Post('')
   criar(@User('uid') uid: string, @Body() fluxoBody: Partial<FluxoCaixaDTO>) {
     return this.fluxoService.criar(uid, fluxoBody)

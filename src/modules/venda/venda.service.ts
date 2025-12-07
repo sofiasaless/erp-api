@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { DocumentReference, Timestamp } from 'firebase-admin/firestore';
+import { DocumentReference, QueryPartition, Timestamp } from 'firebase-admin/firestore';
 import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
 import { EstatisticaProdutoService } from 'src/modules/estatistica-produto/estatistica-produto.service';
@@ -105,10 +105,17 @@ export class VendaService {
     return docToObject<VendaDTO>(vendaConcluida.id, vendaConcluida.data()!);
   }
 
-  public async enontrarVendasPorIdFuncionario(id_empresa: string, id_funcionario: string) {
-    let querySnap = await this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
-      .where("funcionarios_responsaveis", "array-contains", idToDocumentRef(id_funcionario, COLLECTIONS.FUNCIONARIOS))
-      .get()
+  public async enontrarVendasPorIdFuncionario(id_empresa: string, id_funcionario: string, filtragemData?: { inicio: string, fim: string }) {
+    let query = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+      .where("funcionarios_responsaveis", "array-contains", idToDocumentRef(id_funcionario, COLLECTIONS.FUNCIONARIOS));
+
+    if (filtragemData) {
+      query = query.where("data_venda", ">=", Timestamp.fromDate(new Date(filtragemData.inicio)))
+      .where("data_venda", "<=", Timestamp.fromDate(new Date(filtragemData.fim)))
+      .orderBy('data_venda', 'desc');
+    }
+
+    let querySnap = await query.get();
 
     if (querySnap.empty) {
       return {
@@ -118,14 +125,9 @@ export class VendaService {
       } as FuncionarioEstatisticasVendas
     }
 
-    // const vendasEncontradas: VendaDTO[] = querySnap.docs.map((venda) => {
-    //   return 
-    // })
-
     const vendasObject: VendaDTO[] = querySnap.docs.map((doc) => {
       return docToObject<VendaDTO>(doc.id, doc.data());
     })
-
 
     return {
       total_vendas: querySnap.size,

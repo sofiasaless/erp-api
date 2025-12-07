@@ -106,8 +106,8 @@ export class FuncionarioService {
     await this.setup().doc(id_funcionario).delete();
   }
 
-  public async encontrarVendas(id_empresa: string, id_funcionario: string) {
-    return await this.vendaService.enontrarVendasPorIdFuncionario(id_empresa, id_funcionario);    
+  public async encontrarVendas(id_empresa: string, id_funcionario: string, filtragemData?: { inicio: string, fim: string }) {
+    return await this.vendaService.enontrarVendasPorIdFuncionario(id_empresa, id_funcionario, filtragemData);    
   }
 
 
