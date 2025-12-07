@@ -52,12 +52,18 @@ export class FuncionarioController {
 
   @Get('/vendas/:id')
   dadosDasVendas(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @User('uid') uid: string,
     // posteriormente fazer filtragem com datas de vendas
     @Query('periodoInicio') periodoInicio: string,
     @Query('periodoFim') periodoFim: string
   ) {
+    if (periodoFim !== undefined && periodoInicio !== undefined) {
+      return this.funcionarioService.encontrarVendas(uid, id, {
+        fim: periodoFim,
+        inicio: periodoInicio
+      });
+    }
     return this.funcionarioService.encontrarVendas(uid, id);
   }
 
