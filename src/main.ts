@@ -15,7 +15,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3001;
 
   // MUITO IMPORTANTE NO CLOUD RUN:
   await app.listen(port, '0.0.0.0');

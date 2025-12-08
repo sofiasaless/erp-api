@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Put, UseGuards } from '@nestjs/common';
 import { EmpresaService } from './empresa.service';
-import { EmpresaDTO } from './empresa.dto';
+import * as empresaDto from './empresa.dto';
 import { User } from 'src/decorator/user.decorator';
 import { AuthGuard } from 'src/auth/auth.guard';
 
@@ -16,7 +16,7 @@ export class EmpresaController {
   }
 
   @Put('/atualizar')
-  atualizarPorId(@User('uid') uid: string, @Body() empresaBody: Partial<EmpresaDTO>) {
+  atualizarPorId(@User('uid') uid: string, @Body() empresaBody: Partial<empresaDto.EmpresaDTO>) {
     // tirando os campos que nao permitidos passar por alterações
     const camposNaoPermitidos = ['id_empresa', 'empresa_reference', 'data_criacao', 'email', 'plano'];
     for (const campo of camposNaoPermitidos) {
@@ -24,6 +24,18 @@ export class EmpresaController {
     }
 
     this.empresaService.atualizar(uid, empresaBody);
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Put('/atalhos-rapidos/atualizar')
+  atualizarAtalhosRapidos(@User('uid') uid: string, @Body() atalhoBody: Partial<empresaDto.AtalhosRapidosEmpresa>) {
+    this.empresaService.atualizarAtalhosRapidos(uid, atalhoBody);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Put('/atalhos-rapidos/remover')
+  removerAtalhosRapidos(@User('uid') uid: string, @Body() atalhoBody: empresaDto.AtalhosRapidosEmpresa) {
+    this.empresaService.removerAtalhoRapido(uid, atalhoBody);
   }
 
 }
