@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import admin from "firebase-admin";
+import { Timestamp } from 'firebase-admin/firestore';
 import { db } from 'src/config/firebase';
 import { COLLECTIONS } from 'src/enum/firestore.enum';
 import { AtalhosRapidosEmpresa, EmpresaDTO, toAtalhosRapidosEmpresaReponse } from './empresa.dto';
-import { v4 as uuidv4 } from 'uuid';
-import { Timestamp } from 'firebase-admin/firestore';
 
 @Injectable()
 export class EmpresaService {
@@ -59,7 +59,7 @@ export class EmpresaService {
     if (payload.label === undefined || payload.label === '') throw new HttpException('Necessário label para adicionar o atalho', HttpStatus.BAD_REQUEST);
 
     const atalho: AtalhosRapidosEmpresa = {
-      id: uuidv4(),
+      id: randomUUID(),
       label: payload.label,
       criado_em: new Date()
     }

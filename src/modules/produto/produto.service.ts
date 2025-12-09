@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ProdutoDTO } from './produto.dto';
 import { db } from 'src/config/firebase';
-import { COLLECTIONS } from 'src/enum/firestore.enum';
+import { COLLECTIONS, DOC_COUNTERS } from 'src/enum/firestore.enum';
 import { docToObject, idToDocumentRef } from 'src/util/firestore.util';
 import { DicionarioService } from '../dicionario/dicionario.service';
 import admin from "firebase-admin";
@@ -44,7 +44,26 @@ export class ProdutoService {
   public async criar(id_empresa: string, produto: ProdutoDTO): Promise<ProdutoDTO> {
     let produtoId: string = ''
 
+    // verificando se o codigo ja existe em algum produto da empresa
+    if (produto.codigo !== undefined || produto.codigo !== '') {
+      const prodCodigo = await this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+        .where("codigo", "==", produto.codigo).get();
+
+      if (!prodCodigo.empty) throw new HttpException('Código já utilizado por outro produto.', HttpStatus.BAD_REQUEST);
+    }
+
     await db.runTransaction(async (transaction) => {
+      let proximoCodigo: number = 0
+
+      if (produto.codigo !== undefined || produto.codigo !== '') {
+        const counterRef = this.setup().doc(DOC_COUNTERS.PRODUTO);
+        const counterSnapshot = await transaction.get(counterRef);
+
+        const current = counterSnapshot.exists ? counterSnapshot.data()!.valor : 0;
+        proximoCodigo = current + 1;
+
+        transaction.update(counterRef, { valor: proximoCodigo });
+      }
 
       const produtoRef = this.setup().doc();
       produtoId = produtoRef.id
@@ -56,8 +75,7 @@ export class ProdutoService {
         categoria_reference: (produto.categoria_reference === '') ? null : idToDocumentRef(produto.categoria_reference as string, COLLECTIONS.CATEGORIA_PRODUTO),
         rotativo: 1,
         preco_compra: (produto.preco_compra === undefined) ? 0 : produto.preco_compra,
-        // revisar essa lógica de código do produto, pois quando acontecer alguma exclusão de produto, pode gerar produtos com o mesmo código
-        codigo: (produto.codigo) ? produto.codigo : (await this.setup().count().get().then(count => count.data().count + 1)).toString(),
+        codigo: (produto.codigo) ? produto.codigo : proximoCodigo.toString(),
         ultima_atualizacao: new Date(),
         ultima_reposicao: new Date(),
         data_criacao: new Date(),
@@ -232,9 +250,9 @@ export class ProdutoService {
   }
 
   public async encontrarEstatisticaQtdEstoque(id_empresa: string, ordenarPor: string, limite?: number) {
-    const ordem: admin.firestore.OrderByDirection = (ordenarPor === 'asc')?'asc':'desc';
+    const ordem: admin.firestore.OrderByDirection = (ordenarPor === 'asc') ? 'asc' : 'desc';
     let query = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
-    .orderBy("quantidade_estoque", ordem);
+      .orderBy("quantidade_estoque", ordem);
 
     if (limite) query = query.limit(limite);
 

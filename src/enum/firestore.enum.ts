@@ -8,3 +8,8 @@ export enum COLLECTIONS {
   VENDAS = "vendas",
   FLUXOS = "fluxos-caixa"
 }
+
+export enum DOC_COUNTERS {
+  PRODUTO = 'meta-produto_counter',
+  VENDA = 'meta-vendas_counter',
+}
