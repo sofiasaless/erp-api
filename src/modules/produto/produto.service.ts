@@ -249,6 +249,11 @@ export class ProdutoService {
     return querySnap.docs
   }
 
+  public async encontrarPorCodigo(id_empresa: string, codigo: string) {
+    const resultado = await this.encontrar("codigo", "==", codigo, true, id_empresa) as ProdutoDTO[];
+    return resultado[0]
+  }
+
   public async encontrarEstatisticaQtdEstoque(id_empresa: string, ordenarPor: string, limite?: number) {
     const ordem: admin.firestore.OrderByDirection = (ordenarPor === 'asc') ? 'asc' : 'desc';
     let query = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
