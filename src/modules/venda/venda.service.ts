@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DocumentReference, QueryPartition, Timestamp } from 'firebase-admin/firestore';
 import { db } from 'src/config/firebase';
-import { COLLECTIONS } from 'src/enum/firestore.enum';
+import { COLLECTIONS, DOC_COUNTERS } from 'src/enum/firestore.enum';
 import { EstatisticaProdutoService } from 'src/modules/estatistica-produto/estatistica-produto.service';
 import { ProdutoService } from 'src/modules/produto/produto.service';
 import { docToObject, idToDocumentRef } from 'src/util/firestore.util';
@@ -59,6 +59,12 @@ export class VendaService {
 
     if (itensVendaParaSalvar === undefined) throw new HttpException('Erro ao definir os itens da venda', HttpStatus.BAD_REQUEST)
 
+    const counterRef = this.setup().doc(DOC_COUNTERS.VENDA);
+    const counterSnapshot = await counterRef.get();
+
+    const current = counterSnapshot.exists ? counterSnapshot.data()!.valor : 0;
+    const promixoCodigo = current + 1;
+
     const vendaParaSalvar: VendaDTO = {
       ...venda,
       pagamentos: venda.pagamentos,
@@ -68,7 +74,7 @@ export class VendaService {
       funcionarios_responsaveis: funcionariosResponsaveisRef,
       operador_caixa: operadorCaixaRef,
       itens_venda: itensVendaParaSalvar,
-      codigo: Math.random().toString(), // temporario
+      codigo: '',
       data_venda: new Date()
     }
 
@@ -89,6 +95,10 @@ export class VendaService {
           )
         }
       }
+
+      // definido o codigo da venda
+      transaction.update(counterRef, { valor: promixoCodigo })
+      vendaParaSalvar.codigo = promixoCodigo.toString();
 
       // salvar venda
       transaction.set(novaVendaRef, vendaParaSalvar)
@@ -111,8 +121,8 @@ export class VendaService {
 
     if (filtragemData) {
       query = query.where("data_venda", ">=", Timestamp.fromDate(new Date(filtragemData.inicio)))
-      .where("data_venda", "<=", Timestamp.fromDate(new Date(filtragemData.fim)))
-      .orderBy('data_venda', 'desc');
+        .where("data_venda", "<=", Timestamp.fromDate(new Date(filtragemData.fim)))
+        .orderBy('data_venda', 'desc');
     }
 
     let querySnap = await query.get();
@@ -165,7 +175,7 @@ export class VendaService {
 
     let query = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
       .where("data_venda", ">=", dataAbertura)
-    .orderBy("data_venda", "desc");
+      .orderBy("data_venda", "desc");
 
     if (!fluxoEncontrado.status) {
       const dataFechamento = Timestamp.fromDate(fluxoEncontrado?.data_fechamento!)

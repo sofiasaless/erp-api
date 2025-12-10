@@ -42,7 +42,7 @@ export class ProdutoController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Get('/encontrar/:id')
+  @Get('/encontrar/id/:id')
   encontrarPorId(@Param('id') id: string) {
     try {
       return this.produtoService.encontrarPorId(id);
@@ -111,6 +111,11 @@ export class ProdutoController {
     } catch (error) {
       throw new HttpException(`Erro ao encontrar produto com maior estoque ${error}`, HttpStatus.BAD_REQUEST)
     }
+  }
+
+  @Get('/encontrar/codigo/:codigo')
+  encontrarPorCodigo(@Param('codigo') codigo: string, @User('uid') uid: string) {
+    return this.produtoService.encontrarPorCodigo(uid, codigo);
   }
 
 }
