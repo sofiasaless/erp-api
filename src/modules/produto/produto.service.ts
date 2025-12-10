@@ -251,6 +251,7 @@ export class ProdutoService {
 
   public async encontrarPorCodigo(id_empresa: string, codigo: string) {
     const resultado = await this.encontrar("codigo", "==", codigo, true, id_empresa) as ProdutoDTO[];
+    if (resultado[0] === undefined) throw new HttpException('Produto não encontrado por código', HttpStatus.BAD_REQUEST);
     return resultado[0]
   }
 
