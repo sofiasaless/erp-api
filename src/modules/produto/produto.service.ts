@@ -274,7 +274,9 @@ export class ProdutoService {
   }
 
   public atualizar_EmTransacao(transaction: FirebaseFirestore.Transaction, id_produto: string, produtoAtualizado: Partial<ProdutoDTO>) {
-    const docRef = this.setup().doc(id_produto)
+    const docRef = this.setup().doc(id_produto) // referência do produto que vai sofrar atualização
+    
+    // adicionando transação de update do produto na transação recebida por parâmetro
     transaction.update(docRef, {
       ...produtoAtualizado
     });

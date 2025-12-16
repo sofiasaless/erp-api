@@ -57,8 +57,9 @@ export class CategoriaProdutoService {
   }
 
   public async remover(id_categoria: string): Promise<void> {
-    // ao remover uma categoria, todos os produtos dessa categoria devem ser desvinculados
-
+    // ao remover uma categoria, todos os produtos que tem vínculo com ela devem ser atualizados
+    // as atualizações de vários produtos são sensíveis a erros nativos do Firebase ou até de conexão
+    // ..... por isso devem ser feitas em transação, para que um rollback aconteça caso ocorra erros inesperados
     await db.runTransaction(async (transaction) => {
       const categoriaRef = this.setup().doc(id_categoria);
 
@@ -67,13 +68,16 @@ export class CategoriaProdutoService {
 
       // atualizando os produtos um por um
       produtosAssociados.forEach((produto) => {
+        // a categoria do produto serão atualizadas para null, já que sua categoria irá ser removida do banco
         const produtoAtualizado: Partial<ProdutoDTO> = {
           categoria_reference: null,
         }
 
+        // enviando transação e o produto com sua atualização de categoria
         this.produtoService.atualizar_EmTransacao(transaction, produto.id, produtoAtualizado);
       })
 
+      // após desvincular todos os produtos da categoria, finalmente é hora de removê-la
       transaction.delete(categoriaRef)
     })
   }
