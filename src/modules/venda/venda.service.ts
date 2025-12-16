@@ -31,18 +31,13 @@ export class VendaService {
 
   public async criar(id_empresa: string, venda: Partial<VendaDTO>) {
     // antes de tudo, necessário verificar se há um fluxo de caixa aberto para a empresa realizar uma venda
-    // ........
     const fluxoAtivo = await this.fluxoService.encontrar("status", "==", true, id_empresa)
-    if (fluxoAtivo === undefined) throw Error('Sem caixa aberto para realizar venda')
+    if (fluxoAtivo === undefined) throw new HttpException('Sem caixa aberto para realizar venda', HttpStatus.BAD_REQUEST);
 
     // validando campos obrigatórios na venda
-    if (
-      venda.pagamentos === undefined ||
-      venda.status === undefined ||
-      venda.tipo === undefined
-    ) throw new HttpException(`Campos obrigatórios faltando na venda`, HttpStatus.BAD_REQUEST);
+    if (venda.pagamentos === undefined || venda.status === undefined || venda.tipo === undefined) throw new HttpException(`Campos obrigatórios faltando na venda`, HttpStatus.BAD_REQUEST);
 
-
+    // formatando ids em string para DocumentReference
     const empresaRef = idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS);
     const funcionariosResponsaveisRef: DocumentReference[] = venda.funcionarios_responsaveis?.map((id_funcionario) => {
       return idToDocumentRef(id_funcionario, COLLECTIONS.FUNCIONARIOS);
@@ -57,7 +52,7 @@ export class VendaService {
       return itemAtualizado
     })
 
-    if (itensVendaParaSalvar === undefined) throw new HttpException('Erro ao definir os itens da venda', HttpStatus.BAD_REQUEST)
+    if (itensVendaParaSalvar === undefined) throw new HttpException('Erro ao definir os itens da venda', HttpStatus.INTERNAL_SERVER_ERROR)
 
     const counterRef = this.setup().doc(DOC_COUNTERS.VENDA);
     const counterSnapshot = await counterRef.get();
@@ -74,15 +69,15 @@ export class VendaService {
       funcionarios_responsaveis: funcionariosResponsaveisRef,
       operador_caixa: operadorCaixaRef,
       itens_venda: itensVendaParaSalvar,
-      codigo: '',
+      codigo: promixoCodigo.toString(),
       data_venda: new Date()
     }
 
     let novaVendaRef: DocumentReference<FirebaseFirestore.DocumentData, FirebaseFirestore.DocumentData> = this.setup().doc()
-
+    
     // executando a transação nas estatisticas, fluxo e venda
     await db.runTransaction(async (transaction) => {
-
+      // 
       await this.estatisticaProdutoService.adicionarLote_EmTransacao(transaction, id_empresa, vendaParaSalvar.itens_venda);
 
       for (const item of vendaParaSalvar.itens_venda!) {
@@ -98,16 +93,15 @@ export class VendaService {
 
       // definido o codigo da venda
       transaction.update(counterRef, { valor: promixoCodigo })
-      vendaParaSalvar.codigo = promixoCodigo.toString();
 
-      // salvar venda
+      // salvar venda em transação
       transaction.set(novaVendaRef, vendaParaSalvar)
 
-      // atualizar fluxo
       const atualizacoesParaFluxo: Partial<FluxoCaixaDTO> = {
         entradas: venda.pagamentos,
         troco: calcularTroco(venda)
       }
+      // atualizar fluxo em transação
       await this.fluxoService.atualizar_EmTransacao(transaction, id_empresa, atualizacoesParaFluxo)
     })
 

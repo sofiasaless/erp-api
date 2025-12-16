@@ -31,8 +31,7 @@ export class DicionarioService {
   public async adicionar_EmTransacao(
     transaction: FirebaseFirestore.Transaction,
     id_empresa: string,
-    item_dicionario: ProdutoDicionario,
-    dicionario?: DicionarioDTO
+    item_dicionario: ProdutoDicionario
   ) {
     const empresaRef = idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS);
 
@@ -41,7 +40,7 @@ export class DicionarioService {
       .get();
 
     if (query.empty) {
-      // criar novo dicionário
+      // adicionando a criação do dicionário na transação
       const newRef = this.setup().doc();
       transaction.set(newRef, {
         empresa_reference: empresaRef,
@@ -51,8 +50,8 @@ export class DicionarioService {
     }
 
     const dicRef = query.docs[0].ref;
+    // adicionando a atualização do dicionário na transação
     transaction.update(dicRef, {
-      ...dicionario,
       dicionario_produtos: admin.firestore.FieldValue.arrayUnion(item_dicionario)
     });
   }
