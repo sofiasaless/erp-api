@@ -304,5 +304,19 @@ export class ProdutoService {
     }
   }
 
+  public async encontrarValorEstoque(id_empresa: string) {
+    const snap = await this.setup()
+      .where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+    .get();
+
+    if (snap.empty) return 0;
+
+    const total = snap.docs.reduce((acumulador, docProd) => {
+      return acumulador + (docProd.data().quantidade_estoque * docProd.data().preco_venda)
+    }, 0)
+
+    return total;
+  }
+
 
 }
