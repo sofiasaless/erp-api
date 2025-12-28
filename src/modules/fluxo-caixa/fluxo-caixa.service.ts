@@ -173,7 +173,7 @@ export class FluxoCaixaService {
 
     let query = this.setup()
       .where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
-    .orderBy("data_fechamento", "desc");
+    .orderBy("data_abertura", "desc");
 
     let totalDocs = await query.count().get();
 

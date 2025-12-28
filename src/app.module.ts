@@ -5,13 +5,14 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EmpresaModule } from './modules/empresa/empresa.module';
 import { ProdutoModule } from './modules/produto/produto.module';
-// import { AdminModule } from './admin/admin.module';
 import { FuncionarioModule } from './modules/funcionario/funcionario.module';
 import { CategoriaProdutoModule } from './modules/categoria-produto/categoria-produto.module';
 import { DicionarioModule } from './modules/dicionario/dicionario.module';
 import { EstatisticaProdutoModule } from './modules/estatistica-produto/estatistica-produto.module';
 import { VendaModule } from './modules/venda/venda.module';
 import { FluxoCaixaModule } from './modules/fluxo-caixa/fluxo-caixa.module';
+import { AdminEmpresaModule } from './admin/admin-empresa/admin-empresa.module';
+import { AdminUserModule } from './admin/admin-user/admin-user.module';
 
 @Module({
   imports: [
@@ -19,13 +20,14 @@ import { FluxoCaixaModule } from './modules/fluxo-caixa/fluxo-caixa.module';
     ProdutoModule,
     EmpresaModule,
     AuthModule,
-    // AdminModule,
     FuncionarioModule,
     CategoriaProdutoModule,
     DicionarioModule,
     EstatisticaProdutoModule,
     VendaModule,
-    FluxoCaixaModule
+    FluxoCaixaModule,
+    AdminEmpresaModule,
+    AdminUserModule
   ],
   controllers: [AppController],
   providers: [AppService],
