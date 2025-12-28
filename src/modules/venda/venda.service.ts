@@ -74,7 +74,7 @@ export class VendaService {
     }
 
     let novaVendaRef: DocumentReference<FirebaseFirestore.DocumentData, FirebaseFirestore.DocumentData> = this.setup().doc()
-    
+
     // executando a transação nas estatisticas, fluxo e venda
     await db.runTransaction(async (transaction) => {
       // 
@@ -186,6 +186,60 @@ export class VendaService {
 
     return vendasEncontradas;
   }
+
+  public async paginarVendasHistoricoFluxo({
+    id_empresa,
+    id_fluxo,
+    limite,
+    cursor,
+    cursorPrev
+  }: {
+    id_empresa: string;
+    id_fluxo: string;
+    limite: number;
+    cursor?: string;      // próximo
+    cursorPrev?: string;  // anterior
+  }) {
+    const fluxoEncontrado = await this.fluxoService.encontrarPorId(id_fluxo);
+    const dataAbertura = Timestamp.fromDate(fluxoEncontrado?.data_abertura!)
+
+    let query = this.setup().orderBy("data_venda", "desc")
+      .where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+    .where("data_venda", ">=", dataAbertura);
+
+    let totalDocs = await query.count().get();
+
+    let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData, FirebaseFirestore.DocumentData>;
+
+    // Indo para a próxima página
+    if (cursor) {
+      const cursorDoc = await this.setup().doc(cursor).get();
+      snapshot = await query.startAfter(cursorDoc).limit(limite).get();
+    }
+    // Voltando para a página anterior
+    else if (cursorPrev) {
+      const cursorDoc = await this.setup().doc(cursorPrev).get();
+      snapshot = await query.endBefore(cursorDoc).limitToLast(limite).get();
+    }
+    // Primeira página
+    else {
+      snapshot = await query.limit(limite).get();
+    }
+
+    const vendas: VendaDTO[] = snapshot.docs.map(doc => ({
+      ...docToObject<VendaDTO>(doc.id, doc.data())
+    }));
+
+    const first = snapshot.docs[0];
+    const last = snapshot.docs[snapshot.docs.length - 1];
+
+    return {
+      vendas,
+      total: totalDocs.data().count,
+      nextCursor: last?.id ?? null,
+      prevCursor: first?.id ?? null,
+    };
+  };
 
 
 }

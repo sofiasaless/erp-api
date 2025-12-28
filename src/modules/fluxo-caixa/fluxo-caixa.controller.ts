@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { FluxoCaixaService } from './fluxo-caixa.service';
 import { User } from 'src/decorator/user.decorator';
@@ -10,7 +10,7 @@ import { COLLECTIONS } from 'src/enum/firestore.enum';
 @UseGuards(AuthGuard)
 export class FluxoCaixaController {
 
-  constructor(private readonly fluxoService: FluxoCaixaService) {}
+  constructor(private readonly fluxoService: FluxoCaixaService) { }
 
   @HttpCode(HttpStatus.CREATED)
   @Post('')
@@ -25,7 +25,7 @@ export class FluxoCaixaController {
     if (resultado === undefined) throw new HttpException(`Não há fluxo aberto para a empresa de ID ${uid}`, HttpStatus.BAD_REQUEST)
     return resultado
   }
-  
+
   @Get('/listar')
   listarTodos(@User('uid') uid: string) {
     return this.fluxoService.listarTodos(uid)
@@ -51,7 +51,28 @@ export class FluxoCaixaController {
   @HttpCode(HttpStatus.CREATED)
   @Put('/reposicao/:id')
   adicionarReposicao(@Param('id') id: string, @Body() sangriaPayload: Partial<SangriaOuReposicao>) {
-    this.fluxoService.adicionarSangriaOuReposicao(id, sangriaPayload, 'reposicao_troco');    
+    this.fluxoService.adicionarSangriaOuReposicao(id, sangriaPayload, 'reposicao_troco');
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('/paginar')
+  paginarHistoricoVendas(
+    @User('uid') uid: string,
+    @Query('limite') limite: number,
+    @Query('cursor') cursor: string,
+    @Query('cursorPrev') cursorPrev: string,
+  ) {
+    try {
+      const resultado = this.fluxoService.paginarFluxos({
+        id_empresa: uid,
+        limite: Number(limite),
+        cursor: cursor,
+        cursorPrev: cursorPrev,
+      });
+      return resultado;
+    } catch (error) {
+      throw new HttpException(`Erro ao paginar fluxos ${error}`, HttpStatus.BAD_REQUEST)
+    }
   }
 
 }

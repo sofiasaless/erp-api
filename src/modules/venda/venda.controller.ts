@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/decorator/user.decorator';
 import { VendaDTO } from './venda.dto';
@@ -8,7 +8,7 @@ import { VendaService } from './venda.service';
 @UseGuards(AuthGuard)
 export class VendaController {
 
-  constructor(private readonly vendaService: VendaService) {}
+  constructor(private readonly vendaService: VendaService) { }
 
   @HttpCode(HttpStatus.CREATED)
   @Post()
@@ -28,6 +28,28 @@ export class VendaController {
   @Get('/listar/fluxo/:id')
   encontrarPorFluxo(@User('uid') uid: string, @Param('id') id_fluxo: string) {
     return this.vendaService.encontrarPorIdFluxo(uid, id_fluxo);
+  }
+
+  @Get('/paginar/:idFluxo')
+  paginarHistoricoVendas(
+    @User('uid') uid: string,
+    @Param('idFluxo') idFluxo: string,
+    @Query('limite') limite: number,
+    @Query('cursor') cursor: string,
+    @Query('cursorPrev') cursorPrev: string,
+  ) {
+    try {
+      const resultado = this.vendaService.paginarVendasHistoricoFluxo({
+        id_empresa: uid,
+        id_fluxo: idFluxo,
+        limite: Number(limite),
+        cursor: cursor,
+        cursorPrev: cursorPrev,
+      });
+      return resultado;
+    } catch (error) {
+      throw new HttpException(`Erro ao paginar vendas ${error}`, HttpStatus.BAD_REQUEST)
+    }
   }
 
 }
