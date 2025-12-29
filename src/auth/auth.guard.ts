@@ -20,7 +20,9 @@ export class AuthGuard implements CanActivate {
         claims: (await adminAuth.getUser(decodedToken.uid)).customClaims
       }
 
-      if ((request as any).user.claims.role === 'user') {
+      const claims = (request as any).user.claims;
+
+      if (claims.role === 'user' && claims.active === true) {
         return true
       }
 

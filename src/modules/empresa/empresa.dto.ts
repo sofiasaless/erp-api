@@ -29,6 +29,7 @@ export class EmpresaDTO {
   email: string;
   email_contato: string;
   senha?: string;
+  estado: boolean;
   atalhos_rapidos?: AtalhosRapidosEmpresaResponse[];
   taxa_servico?: TaxaServico;
   data_criacao: Date;
