@@ -13,6 +13,9 @@ import { VendaModule } from './modules/venda/venda.module';
 import { FluxoCaixaModule } from './modules/fluxo-caixa/fluxo-caixa.module';
 import { AdminEmpresaModule } from './admin/admin-empresa/admin-empresa.module';
 import { AdminUserModule } from './admin/admin-user/admin-user.module';
+import { AdminFuncionarioController } from './admin/admin-funcionario/admin-funcionario.controller';
+import { AdminFuncionarioService } from './admin/admin-funcionario/admin-funcionario.service';
+import { AdminFuncionarioModule } from './admin/admin-funcionario/admin-funcionario.module';
 
 @Module({
   imports: [
@@ -27,9 +30,10 @@ import { AdminUserModule } from './admin/admin-user/admin-user.module';
     VendaModule,
     FluxoCaixaModule,
     AdminEmpresaModule,
-    AdminUserModule
+    AdminUserModule,
+    AdminFuncionarioModule
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, AdminFuncionarioController],
+  providers: [AppService, AdminFuncionarioService],
 })
 export class AppModule {}

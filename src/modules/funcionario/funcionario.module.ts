@@ -6,6 +6,7 @@ import { VendaModule } from '../venda/venda.module';
 @Module({
   controllers: [FuncionarioController],
   providers: [FuncionarioService],
-  imports: [forwardRef(() => VendaModule)]
+  imports: [forwardRef(() => VendaModule)],
+  exports: [FuncionarioService],
 })
 export class FuncionarioModule {}

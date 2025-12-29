@@ -38,7 +38,7 @@ export class FuncionarioService {
     // validações
     if (payload.nome === undefined || payload.nome === '') throw new HttpException(`Necessário preencher nome.`, HttpStatus.BAD_REQUEST)
     if (payload.senha === undefined || payload.senha === '') throw new HttpException(`Necessário preencher senha.`, HttpStatus.BAD_REQUEST)
-    
+
     let query = this.setup().
       where('empresa_reference', '==', idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS)).
       where('nome', '==', payload.nome);
@@ -46,7 +46,7 @@ export class FuncionarioService {
     if ((await query.get()).empty) throw new NotFoundException(`Funcionário de nome ${payload.nome} não foi encontrado`)
 
     const funcionarioEncontrado = this.docToObject((await query.get()).docs[0].id, (await query.get()).docs[0].data());
-    
+
     if (!verificarSenha(payload.senha, funcionarioEncontrado.senha)) throw new HttpException('Senha incorreta', HttpStatus.FORBIDDEN)
 
     return funcionarioEncontrado
@@ -72,22 +72,29 @@ export class FuncionarioService {
     return this.docToObject(doc.id, doc.data()!);
   }
 
-  public async atualizar(id_funcionario: string, payload: Partial<FuncionarioDTO>) {
+  public async atualizar(id_funcionario: string, payload: Partial<FuncionarioDTO>, atualizarSenha: boolean = false) {
     const funcionarioRef = this.setup().doc(id_funcionario);
     const funcionarioDoc = await funcionarioRef.get();
 
     if (!funcionarioDoc.exists) throw new Error("Funcionário não encontrado");
 
-    await funcionarioRef.update({
-      ...payload
-    });
+    if (atualizarSenha) {
+      await funcionarioRef.update({
+        ...payload
+      });
+    } else {
+      await funcionarioRef.update({
+        ...payload,
+        senha: funcionarioDoc.data()!.senha
+      });
+    }
   }
 
   public async listarTodos(id_empresa: string, queryPermissaoFuncionario?: string): Promise<ListaFuncionarioDTO> {
     let query = this.setup().where('empresa_reference', '==', idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS));
-    
+
     if (queryPermissaoFuncionario) query = query.where("permissao", 'array-contains', queryPermissaoFuncionario.toUpperCase());
-    
+
     const querySnap = await query.get()
 
     if (!querySnap.empty) {
@@ -107,7 +114,7 @@ export class FuncionarioService {
   }
 
   public async encontrarVendas(id_empresa: string, id_funcionario: string, filtragemData?: { inicio: string, fim: string }) {
-    return await this.vendaService.enontrarVendasPorIdFuncionario(id_empresa, id_funcionario, filtragemData);    
+    return await this.vendaService.enontrarVendasPorIdFuncionario(id_empresa, id_funcionario, filtragemData);
   }
 
 
