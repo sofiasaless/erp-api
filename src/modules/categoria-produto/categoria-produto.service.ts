@@ -96,4 +96,12 @@ export class CategoriaProdutoService {
     });
   }
 
+  public async atualizar(id_categoria: string, nome: string) {
+    const categoriaRef = this.setup().doc(id_categoria);
+
+    await categoriaRef.update({
+      nome: nome
+    });
+  }
+
 }
