@@ -18,6 +18,7 @@ import { AdminFuncionarioService } from './admin/admin-funcionario/admin-funcion
 import { AdminFuncionarioModule } from './admin/admin-funcionario/admin-funcionario.module';
 import { AdminProdutoModule } from './admin/admin-produto/admin-produto.module';
 import { AdminCategoriaModule } from './admin/admin-categoria/admin-categoria.module';
+import { AdminVendaModule } from './admin/admin-venda/admin-venda.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { AdminCategoriaModule } from './admin/admin-categoria/admin-categoria.mo
     AdminUserModule,
     AdminFuncionarioModule,
     AdminProdutoModule,
-    AdminCategoriaModule
+    AdminCategoriaModule,
+    AdminVendaModule
   ],
   controllers: [AppController, AdminFuncionarioController],
   providers: [AppService, AdminFuncionarioService],
