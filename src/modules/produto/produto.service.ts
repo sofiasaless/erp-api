@@ -51,6 +51,9 @@ export class ProdutoService {
 
       if (!prodCodigo.empty) throw new HttpException('Código já utilizado por outro produto.', HttpStatus.BAD_REQUEST);
     }
+    if (produto.preco_compra === undefined) {
+      produto.preco_compra = 0
+    }
 
     await db.runTransaction(async (transaction) => {
       let proximoCodigo: number = 0
@@ -196,6 +199,8 @@ export class ProdutoService {
 
     if (categoriaId) query = query.where("categoria_reference", "==", idToDocumentRef(categoriaId, COLLECTIONS.CATEGORIA_PRODUTO));
 
+    const total = await query.count().get();
+
     let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData, FirebaseFirestore.DocumentData>;
 
     // Indo para a próxima página
@@ -222,6 +227,7 @@ export class ProdutoService {
 
     return {
       produtos,
+      total: total.data().count,
       nextCursor: last?.id ?? null,
       prevCursor: first?.id ?? null,
     };

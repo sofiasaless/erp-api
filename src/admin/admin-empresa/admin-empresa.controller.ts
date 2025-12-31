@@ -1,5 +1,5 @@
 import { EmpresaDTO } from '@/modules/empresa/empresa.dto';
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AdminEmpresaService } from './admin-empresa.service';
 import { PLANOS } from '@/enum/planos.enum';
 import { EmpresaService } from '@/modules/empresa/empresa.service';
@@ -52,11 +52,13 @@ export class AdminEmpresaController {
     this.adminEmpresaService.atualizarPlano(idEmpresa, plano);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Put('/desativar/:idEmpresa')
   desativar(@Param('idEmpresa') idEmpresa: string) {
     return this.adminEmpresaService.atualizarEstadoEmpresa(idEmpresa, false);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Put('/ativar/:idEmpresa')
   ativar(@Param('idEmpresa') idEmpresa: string) {
     return this.adminEmpresaService.atualizarEstadoEmpresa(idEmpresa, true);

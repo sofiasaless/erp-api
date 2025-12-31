@@ -16,6 +16,8 @@ import { AdminUserModule } from './admin/admin-user/admin-user.module';
 import { AdminFuncionarioController } from './admin/admin-funcionario/admin-funcionario.controller';
 import { AdminFuncionarioService } from './admin/admin-funcionario/admin-funcionario.service';
 import { AdminFuncionarioModule } from './admin/admin-funcionario/admin-funcionario.module';
+import { AdminProdutoModule } from './admin/admin-produto/admin-produto.module';
+import { AdminCategoriaModule } from './admin/admin-categoria/admin-categoria.module';
 
 @Module({
   imports: [
@@ -31,7 +33,9 @@ import { AdminFuncionarioModule } from './admin/admin-funcionario/admin-funciona
     FluxoCaixaModule,
     AdminEmpresaModule,
     AdminUserModule,
-    AdminFuncionarioModule
+    AdminFuncionarioModule,
+    AdminProdutoModule,
+    AdminCategoriaModule
   ],
   controllers: [AppController, AdminFuncionarioController],
   providers: [AppService, AdminFuncionarioService],

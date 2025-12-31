@@ -25,7 +25,10 @@ export class AdminUserService {
   }
 
   private async setUserRole(uid: string, role: "admin" | "user") {
-    await adminAuth.setCustomUserClaims(uid, { role });
+    await adminAuth.setCustomUserClaims(uid, {
+      role,
+      active: true
+    });
     return { success: true };
   }
 

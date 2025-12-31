@@ -22,7 +22,7 @@ export class AuthGuard implements CanActivate {
 
       const claims = (request as any).user.claims;
 
-      if (claims.role === 'user' && claims.active === true) {
+      if ((claims.role === 'user' || claims.role === 'admin') && claims.active === true) {
         return true
       }
 
