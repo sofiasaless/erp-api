@@ -117,5 +117,15 @@ export class FuncionarioService {
     return await this.vendaService.enontrarVendasPorIdFuncionario(id_empresa, id_funcionario, filtragemData);
   }
 
+  public async excluirPorEmpresa(transaction: FirebaseFirestore.Transaction, idEmpresa: string) {
+    const query = this.setup().where('empresa_reference', '==', idToDocumentRef(idEmpresa, COLLECTIONS.EMPRESAS));
+    const snapshot = await query.get();
+
+    if (snapshot.empty) return;
+
+    snapshot.docs.forEach(doc => {
+      transaction.delete(this.setup().doc(doc.id));
+    });
+  }
 
 }

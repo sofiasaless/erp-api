@@ -318,5 +318,18 @@ export class ProdutoService {
     return total;
   }
 
+  public async excluirPorEmpresa(transaction: FirebaseFirestore.Transaction, id_empresa: string) {
+    const produtosRef = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+  
+    const produtosSnap = await produtosRef.get();
+    if (produtosSnap.empty) {
+      return
+    }
+
+    produtosSnap.docs.forEach(doc => {
+      transaction.delete(doc.ref);
+    });
+  }
+
 
 }

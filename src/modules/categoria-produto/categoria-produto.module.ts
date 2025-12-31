@@ -6,6 +6,7 @@ import { ProdutoModule } from '../produto/produto.module';
 @Module({
   controllers: [CategoriaProdutoController],
   providers: [CategoriaProdutoService],
-  imports: [forwardRef(() => ProdutoModule)]
+  imports: [forwardRef(() => ProdutoModule)],
+  exports: [CategoriaProdutoService],
 })
 export class CategoriaProdutoModule { }

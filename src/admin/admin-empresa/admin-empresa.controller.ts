@@ -1,9 +1,15 @@
 import { EmpresaDTO } from '@/modules/empresa/empresa.dto';
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AdminEmpresaService } from './admin-empresa.service';
 import { PLANOS } from '@/enum/planos.enum';
 import { EmpresaService } from '@/modules/empresa/empresa.service';
 import { AdminGuard } from '../admin.guard';
+import { FuncionarioDTO } from '@/modules/funcionario/funcionario.dto';
+
+interface EmpresaPostRequestBodys {
+  empresa: EmpresaDTO;
+  funcionario: FuncionarioDTO
+}
 
 @Controller('admin-empresa')
 @UseGuards(AdminGuard)
@@ -15,8 +21,8 @@ export class AdminEmpresaController {
   ) { }
 
   @Post('/cadastrar')
-  cadastrarEmpresa(@Body() empresa: EmpresaDTO) {
-    this.adminEmpresaService.cadastrarEmpresa(empresa);
+  cadastrarEmpresa(@Body() payload: EmpresaPostRequestBodys) {
+    return this.adminEmpresaService.cadastrarEmpresa(payload.empresa, payload.funcionario);
   }
 
   @Get('/listar')
@@ -66,4 +72,8 @@ export class AdminEmpresaController {
     return this.empresaService.atualizar(idEmpresa, empresaPayload);
   }
 
+  @Delete('/excluir/:idEmpresa')
+  excluir(@Param('idEmpresa') idEmpresa: string) {
+    return this.adminEmpresaService.excluirEmpresa(idEmpresa);
+  }
 }

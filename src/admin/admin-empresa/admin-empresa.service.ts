@@ -1,15 +1,31 @@
-import { adminAuth, db } from '@/config/firebase';
+import { adminAuth } from '@/config/firebase';
 import { COLLECTIONS } from '@/enum/firestore.enum';
 import { PLANOS } from '@/enum/planos.enum';
 import { EmpresaDTO } from '@/modules/empresa/empresa.dto';
+import { FuncionarioDTO } from '@/modules/funcionario/funcionario.dto';
 import { PatternService } from '@/service/pattern.service';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateRequest, getAuth } from 'firebase-admin/auth';
+import { AdminFuncionarioService } from '../admin-funcionario/admin-funcionario.service';
+import { FuncionarioService } from '@/modules/funcionario/funcionario.service';
+import { ProdutoService } from '@/modules/produto/produto.service';
+import { VendaService } from '@/modules/venda/venda.service';
+import { CategoriaProdutoService } from '@/modules/categoria-produto/categoria-produto.service';
+import { FluxoCaixaService } from '@/modules/fluxo-caixa/fluxo-caixa.service';
+import { DicionarioService } from '@/modules/dicionario/dicionario.service';
 
 @Injectable()
 export class AdminEmpresaService extends PatternService {
 
-  constructor() {
+  constructor(
+    private readonly adminFuncionarioService: AdminFuncionarioService,
+    private readonly funcionarioService: FuncionarioService,
+    private readonly produtoService: ProdutoService,
+    private readonly vendaService: VendaService,
+    private readonly categoriaProdService: CategoriaProdutoService,
+    private readonly fluxoCaixaService: FluxoCaixaService,
+    private readonly dicionarioService: DicionarioService
+  ) {
     super(COLLECTIONS.EMPRESAS)
   }
 
@@ -33,10 +49,7 @@ export class AdminEmpresaService extends PatternService {
     }
   }
 
-  public async cadastrarEmpresa(empresa: EmpresaDTO): Promise<EmpresaDTO> {
-    // validações
-    if (empresa.senha === undefined || empresa.senha === '') throw new HttpException("Necessário preencher senha", HttpStatus.BAD_REQUEST)
-
+  public async cadastrarEmpresa(empresa: EmpresaDTO, primeiroFuncionario: FuncionarioDTO): Promise<EmpresaDTO> {
     // body que vai ser salvo no auth
     const empresaBodyAuth: CreateRequest = {
       displayName: empresa.nome,
@@ -58,14 +71,16 @@ export class AdminEmpresaService extends PatternService {
         empresa.estado = true
         empresa.data_criacao = new Date()
         const empresaRef = this.setup().doc(user.uid)
-        await empresaRef.set(empresa)
 
-        return this.docToObject(user.uid, (await empresaRef.get()).data()!)
-      })
-      .catch((error) => {
-        throw new HttpException(`Não foi possível criar a empresa ${error}`, HttpStatus.BAD_REQUEST);
-      })
+        await this.firestore_db().runTransaction(async (transaction) => {
+          transaction.set(empresaRef, empresa)
 
+          // criar o primeiro funcionário vinculando à empresa criada
+          this.adminFuncionarioService.criarPrimeiroFuncionario(transaction, user.uid, primeiroFuncionario);
+        })
+
+        return this.docToObject(user.uid, (await empresaRef.get()).data()!);
+      })
   }
 
   public async listar() {
@@ -149,6 +164,24 @@ export class AdminEmpresaService extends PatternService {
     });
   }
 
+  public async excluirEmpresa(idEmpresa: string) {
+    await adminAuth.deleteUser(idEmpresa);
+
+    // deletar todos os dados associaados a empresa
+    await this.firestore_db().runTransaction(async (transaction) => {
+      await this.funcionarioService.excluirPorEmpresa(transaction, idEmpresa);
+      await this.produtoService.excluirPorEmpresa(transaction, idEmpresa);
+      await this.vendaService.excluirTodasVendasDaEmpresa(transaction, idEmpresa);
+      await this.categoriaProdService.excluirPorEmpresa(transaction, idEmpresa);
+      await this.fluxoCaixaService.excluirPorEmpresa(transaction, idEmpresa);
+      await this.dicionarioService.excluirPorEmpresa(transaction, idEmpresa);
+
+      // por ultimo, deletar finalmente o documento da empresa
+      transaction.delete(this.setup().doc(idEmpresa));
+    });
+
+  }
+
   private async setUserClaims(uid: string, role: "admin" | "user", active: boolean = true) {
     await adminAuth.setCustomUserClaims(uid, {
       role,
@@ -161,17 +194,28 @@ export class AdminEmpresaService extends PatternService {
     return (await getAuth().getUser(idEmpresa)).disabled
   }
 
-  private async gerarEmail(nomeEmpresa: string) {
-    let baseNome = nomeEmpresa
+  private async gerarEmail(nomeEmpresa: string): Promise<string> {
+    const baseNome = nomeEmpresa
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // remove acentos
-      .replace(/[^a-z0-9]/g, ""); // remove caracteres especiais/espacos
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "");
 
-    // verificar se esse email ja nao EXISTE NO FIRESTORE E NO AUTH
-    // .... implementar posteriormente
+    const email = `${baseNome}@upbusiness.com`;
+    try {
+      await getAuth().getUserByEmail(email);
 
-    return `${baseNome}@upbusiness.com`
+      // se chegou aqui, o email JÁ EXISTE
+      const sufixo = Math.floor(Math.random() * 1000);
+      return this.gerarEmail(`${nomeEmpresa}${sufixo}`);
+
+    } catch (error: any) {
+      if (error.code === "auth/user-not-found") {
+        return email;
+      }
+      throw error;
+    }
   }
+
 
 }

@@ -36,6 +36,7 @@ export class EmpresaDTO {
 }
 
 export function toAtalhosRapidosEmpresaReponse (atalhos: AtalhosRapidosEmpresa[]) {
+  if (atalhos === undefined) return []
   const convertidos: AtalhosRapidosEmpresaResponse[] = atalhos.map((atalho) => {
     return {
       id: atalho.id,

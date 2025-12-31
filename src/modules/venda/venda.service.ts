@@ -205,7 +205,7 @@ export class VendaService {
 
     let query = this.setup().orderBy("data_venda", "desc")
       .where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
-    .where("data_venda", ">=", dataAbertura);
+      .where("data_venda", ">=", dataAbertura);
 
     let totalDocs = await query.count().get();
 
@@ -240,6 +240,17 @@ export class VendaService {
       prevCursor: first?.id ?? null,
     };
   };
+
+  public async excluirTodasVendasDaEmpresa(transaction: FirebaseFirestore.Transaction, idEmpresa: string) {
+    const querySnap = await this.setup().where("empresa_reference", "==", idToDocumentRef(idEmpresa, COLLECTIONS.EMPRESAS)).get()
+
+    if (querySnap.empty) return;
+
+    querySnap.docs.forEach((doc) => {
+      transaction.delete(doc.ref)
+    })
+
+  }
 
 
 }

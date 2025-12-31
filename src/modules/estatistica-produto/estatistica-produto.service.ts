@@ -174,5 +174,19 @@ export class EstatisticaProdutoService {
     transaction.delete(estRef);
   }
 
+  public async excluirPorEmpresa(transaction: FirebaseFirestore.Transaction, id_empresa: string) {
+    const estRef = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+  
+    const estSnapshot = await estRef.get();
+  
+    if (estSnapshot.empty) {
+      return
+    }
+  
+    estSnapshot.docs.forEach((doc) => {
+      transaction.delete(doc.ref);
+    });
+  }
+
 
 }

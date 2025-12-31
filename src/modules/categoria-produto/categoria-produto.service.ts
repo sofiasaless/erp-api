@@ -82,4 +82,18 @@ export class CategoriaProdutoService {
     })
   }
 
+  public async excluirPorEmpresa(transaction: FirebaseFirestore.Transaction, id_empresa: string) {
+    const catRef = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS));
+  
+    const catSnapshot = await catRef.get();
+  
+    if (catSnapshot.empty) {
+      return
+    }
+  
+    catSnapshot.docs.forEach((doc) => {
+      transaction.delete(doc.ref);
+    });
+  }
+
 }
