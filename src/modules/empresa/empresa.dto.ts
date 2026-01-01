@@ -46,3 +46,12 @@ export function toAtalhosRapidosEmpresaReponse (atalhos: AtalhosRapidosEmpresa[]
   })
   return convertidos
 }
+
+export class EstatisticasEmpresaDTO {
+  total_empresas: number;
+  total_empresas_ativas: number;
+  total_empresas_inativas: number;
+  total_empresas_gestor: number;
+  total_empresas_pdv: number;
+  total_empresas_completo: number;
+}

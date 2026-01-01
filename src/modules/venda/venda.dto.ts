@@ -53,3 +53,12 @@ export class VendasDoFluxoDTO {
   receita: number;
   vendas: VendaDTO[];
 }
+
+export class VendasCounter {
+  valor: number; // contador de vendas
+  estatisticas_periodos: {
+    data_referente: Date;
+    qtd_vendas: number;
+    receita: number;
+  }[]
+}

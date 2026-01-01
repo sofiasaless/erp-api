@@ -1,7 +1,7 @@
 import { adminAuth } from '@/config/firebase';
 import { COLLECTIONS } from '@/enum/firestore.enum';
 import { PLANOS } from '@/enum/planos.enum';
-import { EmpresaDTO } from '@/modules/empresa/empresa.dto';
+import { EmpresaDTO, EstatisticasEmpresaDTO } from '@/modules/empresa/empresa.dto';
 import { FuncionarioDTO } from '@/modules/funcionario/funcionario.dto';
 import { PatternService } from '@/service/pattern.service';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
@@ -224,6 +224,17 @@ export class AdminEmpresaService extends PatternService {
         return email;
       }
       throw error;
+    }
+  }
+
+  public async buscarEstatisticas(): Promise<EstatisticasEmpresaDTO> {
+    return {
+      total_empresas: (await this.setup().count().get()).data().count,
+      total_empresas_ativas: (await this.setup().where("estado", "==", true).count().get()).data().count,
+      total_empresas_inativas: (await this.setup().where("estado", "==", false).count().get()).data().count,
+      total_empresas_gestor: (await this.setup().where("plano", "==", "GESTOR").count().get()).data().count,
+      total_empresas_pdv: (await this.setup().where("plano", "==", "PDV").count().get()).data().count,
+      total_empresas_completo: (await this.setup().where("plano", "==", "COMPLETO").count().get()).data().count
     }
   }
 

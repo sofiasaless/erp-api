@@ -83,4 +83,9 @@ export class AdminEmpresaController {
   redefinirSenha(@Param('idEmpresa') idEmpresa: string, @Body('senha') senha: string) {
     return this.adminEmpresaService.redefinirSenha(idEmpresa, senha);
   }
+
+  @Get('/estatisticas')
+  buscarEstatisticas() {
+    return this.adminEmpresaService.buscarEstatisticas();
+  }
 }
