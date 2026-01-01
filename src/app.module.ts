@@ -5,13 +5,20 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EmpresaModule } from './modules/empresa/empresa.module';
 import { ProdutoModule } from './modules/produto/produto.module';
-// import { AdminModule } from './admin/admin.module';
 import { FuncionarioModule } from './modules/funcionario/funcionario.module';
 import { CategoriaProdutoModule } from './modules/categoria-produto/categoria-produto.module';
 import { DicionarioModule } from './modules/dicionario/dicionario.module';
 import { EstatisticaProdutoModule } from './modules/estatistica-produto/estatistica-produto.module';
 import { VendaModule } from './modules/venda/venda.module';
 import { FluxoCaixaModule } from './modules/fluxo-caixa/fluxo-caixa.module';
+import { AdminEmpresaModule } from './admin/admin-empresa/admin-empresa.module';
+import { AdminUserModule } from './admin/admin-user/admin-user.module';
+import { AdminFuncionarioController } from './admin/admin-funcionario/admin-funcionario.controller';
+import { AdminFuncionarioService } from './admin/admin-funcionario/admin-funcionario.service';
+import { AdminFuncionarioModule } from './admin/admin-funcionario/admin-funcionario.module';
+import { AdminProdutoModule } from './admin/admin-produto/admin-produto.module';
+import { AdminCategoriaModule } from './admin/admin-categoria/admin-categoria.module';
+import { AdminVendaModule } from './admin/admin-venda/admin-venda.module';
 
 @Module({
   imports: [
@@ -19,15 +26,20 @@ import { FluxoCaixaModule } from './modules/fluxo-caixa/fluxo-caixa.module';
     ProdutoModule,
     EmpresaModule,
     AuthModule,
-    // AdminModule,
     FuncionarioModule,
     CategoriaProdutoModule,
     DicionarioModule,
     EstatisticaProdutoModule,
     VendaModule,
-    FluxoCaixaModule
+    FluxoCaixaModule,
+    AdminEmpresaModule,
+    AdminUserModule,
+    AdminFuncionarioModule,
+    AdminProdutoModule,
+    AdminCategoriaModule,
+    AdminVendaModule
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, AdminFuncionarioController],
+  providers: [AppService, AdminFuncionarioService],
 })
 export class AppModule {}

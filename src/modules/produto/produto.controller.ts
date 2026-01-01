@@ -51,6 +51,11 @@ export class ProdutoController {
     }
   }
 
+  @Get('/encontrar/codigo/:codigo')
+  encontrarPorCodigo(@Param('codigo') codigo: string, @User('uid') uid: string) {
+    return this.produtoService.encontrarPorCodigo(uid, codigo);
+  }
+
   @HttpCode(HttpStatus.OK)
   @Put('/atualizar/:id')
   atualizarPorId(@Param('id') id: string, @User('uid') uid: string, @Body() produtoBody: Partial<ProdutoDTO>) {
@@ -113,9 +118,15 @@ export class ProdutoController {
     }
   }
 
-  @Get('/encontrar/codigo/:codigo')
-  encontrarPorCodigo(@Param('codigo') codigo: string, @User('uid') uid: string) {
-    return this.produtoService.encontrarPorCodigo(uid, codigo);
+  @Get('/estoque-valor')
+  async encontrarEstoqueValorTotal(@User('uid') uid: string) {
+    try {
+      return {
+        total: await this.produtoService.encontrarValorEstoque(uid)
+      }
+    } catch (error) {
+      throw new HttpException(`Erro ao encontrar produto com maior estoque ${error}`, HttpStatus.BAD_REQUEST)
+    }
   }
 
 }

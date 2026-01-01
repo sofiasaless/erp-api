@@ -51,6 +51,9 @@ export class ProdutoService {
 
       if (!prodCodigo.empty) throw new HttpException('Código já utilizado por outro produto.', HttpStatus.BAD_REQUEST);
     }
+    if (produto.preco_compra === undefined) {
+      produto.preco_compra = 0
+    }
 
     await db.runTransaction(async (transaction) => {
       let proximoCodigo: number = 0
@@ -196,6 +199,8 @@ export class ProdutoService {
 
     if (categoriaId) query = query.where("categoria_reference", "==", idToDocumentRef(categoriaId, COLLECTIONS.CATEGORIA_PRODUTO));
 
+    const total = await query.count().get();
+
     let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData, FirebaseFirestore.DocumentData>;
 
     // Indo para a próxima página
@@ -222,6 +227,7 @@ export class ProdutoService {
 
     return {
       produtos,
+      total: total.data().count,
       nextCursor: last?.id ?? null,
       prevCursor: first?.id ?? null,
     };
@@ -302,6 +308,33 @@ export class ProdutoService {
       })
       return
     }
+  }
+
+  public async encontrarValorEstoque(id_empresa: string) {
+    const snap = await this.setup()
+      .where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+    .get();
+
+    if (snap.empty) return 0;
+
+    const total = snap.docs.reduce((acumulador, docProd) => {
+      return acumulador + (docProd.data().quantidade_estoque * docProd.data().preco_venda)
+    }, 0)
+
+    return total;
+  }
+
+  public async excluirPorEmpresa(transaction: FirebaseFirestore.Transaction, id_empresa: string) {
+    const produtosRef = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+  
+    const produtosSnap = await produtosRef.get();
+    if (produtosSnap.empty) {
+      return
+    }
+
+    produtosSnap.docs.forEach(doc => {
+      transaction.delete(doc.ref);
+    });
   }
 
 

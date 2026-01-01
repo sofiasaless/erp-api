@@ -29,12 +29,14 @@ export class EmpresaDTO {
   email: string;
   email_contato: string;
   senha?: string;
+  estado: boolean;
   atalhos_rapidos?: AtalhosRapidosEmpresaResponse[];
   taxa_servico?: TaxaServico;
   data_criacao: Date;
 }
 
 export function toAtalhosRapidosEmpresaReponse (atalhos: AtalhosRapidosEmpresa[]) {
+  if (atalhos === undefined) return []
   const convertidos: AtalhosRapidosEmpresaResponse[] = atalhos.map((atalho) => {
     return {
       id: atalho.id,
@@ -43,4 +45,13 @@ export function toAtalhosRapidosEmpresaReponse (atalhos: AtalhosRapidosEmpresa[]
     }
   })
   return convertidos
+}
+
+export class EstatisticasEmpresaDTO {
+  total_empresas: number;
+  total_empresas_ativas: number;
+  total_empresas_inativas: number;
+  total_empresas_gestor: number;
+  total_empresas_pdv: number;
+  total_empresas_completo: number;
 }

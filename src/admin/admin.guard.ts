@@ -1,10 +1,10 @@
+import { adminAuth } from '@/config/firebase';
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { getAuth } from 'firebase-admin/auth';
-import { adminAuth } from '@/config/firebase';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class AdminGuard implements CanActivate {
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -20,9 +20,7 @@ export class AuthGuard implements CanActivate {
         claims: (await adminAuth.getUser(decodedToken.uid)).customClaims
       }
 
-      const claims = (request as any).user.claims;
-
-      if ((claims.role === 'user' || claims.role === 'admin') && claims.active === true) {
+      if ((request as any).user.claims.role === 'admin') {
         return true
       }
 

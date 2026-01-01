@@ -20,7 +20,7 @@ export class EmpresaService {
       id: id,
       nome: data.nome,
       plano: data.plano,
-      atalhos_rapidos: toAtalhosRapidosEmpresaReponse(data.atalhos_rapidos),
+      atalhos_rapidos: toAtalhosRapidosEmpresaReponse(data.atalhos_rapidos) || [],
       cnpj: data.cnpj,
       descricao: data.descricao,
       endereco: data.endereco,
@@ -28,6 +28,8 @@ export class EmpresaService {
       senha: data.senha,
       taxa_servico: data.taxa_servico,
       email: data.email,
+      estado: data.estado,
+      telefone: data.telefone,
       email_contato: data.email_contato,
       data_criacao: data.data_criacao?.toDate() || ''
     }

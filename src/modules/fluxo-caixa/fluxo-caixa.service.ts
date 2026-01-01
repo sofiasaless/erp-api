@@ -83,7 +83,7 @@ export class FluxoCaixaService {
   public async listarTodos(id_empresa: string) {
     const fluxSnap = await this.setup().where('empresa_reference', '==', idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
       .orderBy("data_abertura", "desc")
-    .get()
+      .get()
 
     if (fluxSnap.empty) return []
 
@@ -94,9 +94,9 @@ export class FluxoCaixaService {
     return resultado
   }
 
-  public async atualizar(id_fluxo: string, fluxBody: Partial<FluxoCaixaDTO>) {    
+  public async atualizar(id_fluxo: string, fluxBody: Partial<FluxoCaixaDTO>) {
     const fluxRef = this.setup().doc(id_fluxo);
-    
+
     await fluxRef.update({
       ...fluxBody
     })
@@ -155,7 +155,70 @@ export class FluxoCaixaService {
     const fluxoRef = this.setup().doc(id_fluxo);
 
     await fluxoRef.update({
-      [tipoOperacao]: admin.firestore.FieldValue.arrayUnion(payloadParaInserir) 
+      [tipoOperacao]: admin.firestore.FieldValue.arrayUnion(payloadParaInserir)
+    })
+  }
+
+  public async paginarFluxos({
+    id_empresa,
+    limite,
+    cursor,
+    cursorPrev
+  }: {
+    id_empresa: string;
+    limite: number;
+    cursor?: string;
+    cursorPrev?: string;
+  }) {
+
+    let query = this.setup()
+      .where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+    .orderBy("data_abertura", "desc");
+
+    let totalDocs = await query.count().get();
+
+    let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData, FirebaseFirestore.DocumentData>;
+
+    // Indo para a próxima página
+    if (cursor) {
+      const cursorDoc = await this.setup().doc(cursor).get();
+      snapshot = await query.startAfter(cursorDoc).limit(limite).get();
+    }
+    // Voltando para a página anterior
+    else if (cursorPrev) {
+      const cursorDoc = await this.setup().doc(cursorPrev).get();
+      snapshot = await query.endBefore(cursorDoc).limitToLast(limite).get();
+    }
+    // Primeira página
+    else {
+      snapshot = await query.limit(limite).get();
+    }
+
+    const fluxos: FluxoCaixaResponseDTO[] = snapshot.docs.map(doc => ({
+      ...this.docToObject(doc.id, doc.data())
+    }));
+
+    const first = snapshot.docs[0];
+    const last = snapshot.docs[snapshot.docs.length - 1];
+
+    return {
+      fluxos,
+      total: totalDocs.data().count,
+      nextCursor: last?.id ?? null,
+      prevCursor: first?.id ?? null,
+    };
+  };
+
+  public async excluirPorEmpresa(transaction: FirebaseFirestore.Transaction, id_empresa: string) {
+    const fluxoRef = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+  
+    const fluxosSnap = await fluxoRef.get()
+    if (fluxosSnap.empty) {
+      return
+    }
+
+    fluxosSnap.docs.forEach(doc => {
+      transaction.delete(doc.ref);
     })
   }
 

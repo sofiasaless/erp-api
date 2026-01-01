@@ -95,5 +95,14 @@ export class DicionarioService {
     return this.docToObject(doc.docs[0].id, doc.docs[0].data())
   }
 
+  public async excluirPorEmpresa(transaction: FirebaseFirestore.Transaction, id_empresa: string) {
+    const dicRef = this.setup().where("empresa_reference", "==", idToDocumentRef(id_empresa, COLLECTIONS.EMPRESAS))
+  
+    if ((await dicRef.get()).empty) {
+      return
+    }
+
+    transaction.delete((await dicRef.get()).docs[0].ref);
+  }
 
 }
