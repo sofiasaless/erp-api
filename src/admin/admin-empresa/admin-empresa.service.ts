@@ -4,7 +4,7 @@ import { PLANOS } from '@/enum/planos.enum';
 import { EmpresaDTO } from '@/modules/empresa/empresa.dto';
 import { FuncionarioDTO } from '@/modules/funcionario/funcionario.dto';
 import { PatternService } from '@/service/pattern.service';
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRequest, getAuth } from 'firebase-admin/auth';
 import { AdminFuncionarioService } from '../admin-funcionario/admin-funcionario.service';
 import { FuncionarioService } from '@/modules/funcionario/funcionario.service';
@@ -180,6 +180,16 @@ export class AdminEmpresaService extends PatternService {
       transaction.delete(this.setup().doc(idEmpresa));
     });
 
+  }
+
+  public async redefinirSenha(idEmpresa: string, novaSenha: string) {
+    if (!novaSenha || novaSenha.length < 6) {
+      throw new HttpException('Senha deve ter no mínimo 6 caracteres', HttpStatus.BAD_REQUEST);
+    }
+
+    await getAuth().updateUser(idEmpresa, {
+      password: novaSenha,
+    });
   }
 
   private async setUserClaims(uid: string, role: "admin" | "user", active: boolean = true) {

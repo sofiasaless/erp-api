@@ -78,4 +78,9 @@ export class AdminEmpresaController {
   excluir(@Param('idEmpresa') idEmpresa: string) {
     return this.adminEmpresaService.excluirEmpresa(idEmpresa);
   }
+
+  @Put('/redefinir-senha/:idEmpresa')
+  redefinirSenha(@Param('idEmpresa') idEmpresa: string, @Body('senha') senha: string) {
+    return this.adminEmpresaService.redefinirSenha(idEmpresa, senha);
+  }
 }
